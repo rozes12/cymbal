@@ -1,6 +1,6 @@
 [
   {
-    "origin": ["https://my-cymbal-app-real-166084822612.us-west1.run.app"],
+    "origin": ["https://my-cymbal-app-real-166084822612.us-west1.run.app", "http://localhost:5173"],
     "method": ["GET"],
     "responseHeader": ["Content-Type"],
     "maxAgeSeconds": 3600
