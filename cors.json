@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://my-cymbal-app-real-166084822612.us-west1.run.app"],
+    "method": ["GET"],
+    "responseHeader": ["Content-Type"],
+    "maxAgeSeconds": 3600
+  }
+]
