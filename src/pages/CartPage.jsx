@@ -62,6 +62,7 @@
 // }
 
 
+
 import React, { useEffect } from "react";
 import { useCartStore } from "@/stores/cartStore";
 import { Button } from "@/components/ui/button";
@@ -140,11 +141,11 @@ export default function CartPage() {
               {cart.map((item) => (
                 <div key={item.id} className="flex items-center py-4">
                   {/* Item Image */}
-                  <div className="flex mr-4">
+                  <div className="flex-shrink-0 mr-4">
                     <img
                       src={item.imageUrl} // Directly use the imageUrl from your item object
                       alt={item.name}
-                      className="w-20 h-20 object-cover rounded-md border border-gray-200"
+                      className="w-200 h-20 object-cover rounded-md border border-gray-200"
                     />
                   </div>
                   {/* Item Details */}
