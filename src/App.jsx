@@ -1,6 +1,8 @@
 
 
-import React from "react";
+// import React from "react";
+import React, { useEffect } from "react";
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "@/components/ui/Navbar";
 import { Button } from "@/components/ui/button";
@@ -11,8 +13,14 @@ import CartPage from "@/pages/CartPage";
 import AccountPage from "@/pages/AccountPage";
 import AdminLoginPage from "@/pages/AdminLoginPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
+import { useProductStore } from "@/stores/productStore";
 
 export default function App() {
+    const fetchProducts = useProductStore((state) => state.fetchProducts);
+
+  useEffect(() => {
+    fetchProducts(); // fetch from GCS on app load
+  }, []);
   return (
     <Router>
       <Navbar />
