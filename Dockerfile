@@ -49,19 +49,16 @@ FROM node:20-alpine AS react-builder
 WORKDIR /app/frontend
 
 # Copy package.json and package-lock.json first to leverage Docker layer caching.
-# This ensures npm install is only re-run if dependencies change.
 COPY package.json package-lock.json ./
 
-# Install frontend dependencies. --omit=dev prevents installing devDependencies.
-# --legacy-peer-deps can help avoid peer dependency warnings/errors.
-RUN npm install --omit=dev --legacy-peer-deps
+# --- CHANGE THIS LINE ---
+# Install ALL dependencies, including devDependencies, because 'vite' is needed for the build.
+RUN npm install
 
 # Copy the rest of your React application files.
-# This includes src/, public/, vite.config.js, etc.
 COPY . .
 
 # Run the build command for your Vite React app.
-# This will create the optimized static files in the 'dist' directory.
 RUN npm run build
 
 # Stage 2: Serve the Static React App with Nginx
@@ -69,17 +66,11 @@ RUN npm run build
 FROM nginx:alpine
 
 # Copy the Nginx configuration file into the container.
-# This custom config is crucial for telling Nginx how to serve your SPA,
-# including handling client-side routing (e.g., React Router).
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy the built React application from the 'react-builder' stage
 # into the Nginx default web server root directory.
 COPY --from=react-builder /app/frontend/dist /usr/share/nginx/html
 
-# Expose port 8080. Cloud Run expects your container to listen on the port
-# specified by the PORT environment variable, which it maps to 8080 by default.
+# Expose port 8080.
 EXPOSE 8080
-
-# The default command for the nginx:alpine image already starts Nginx,
-# so we don't need a custom CMD here.
