@@ -5,6 +5,7 @@ import React, { useEffect } from "react";
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "@/components/ui/Navbar";
+import Footer from "@/components/ui/Footer";
 import { Button } from "@/components/ui/button";
 import HomePage from "@/pages/HomePage";
 import ProductsPage from "@/pages/ProductPage";
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="/admin-login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminDashboardPage />} />
       </Routes>
+      <Footer/>
     </Router>
   );
 }
