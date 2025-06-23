@@ -24,7 +24,7 @@ export default function App() {
   }, []);
   return (
     <Router>
-      <Navbar />
+      {/* <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
@@ -34,7 +34,24 @@ export default function App() {
         <Route path="/admin-login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminDashboardPage />} />
       </Routes>
-      <Footer/>
+      <Footer/> */}
+       {/* This is the key wrapper div for the sticky footer */}
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        {/* The main content area that will grow */}
+        <main className="flex-grow">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/products/:id" element={<ProductDetailsPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/account" element={<AccountPage />} />
+            <Route path="/admin-login" element={<AdminLoginPage />} />
+            <Route path="/admin" element={<AdminDashboardPage />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
     </Router>
   );
 }
