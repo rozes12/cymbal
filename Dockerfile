@@ -5,19 +5,19 @@ FROM node:18-alpine AS builder
 # Set the working directory inside the container.
 WORKDIR /app
 
-# Copy package.json and npm.lock first.
+# Copy package.json and yarn.lock first.
 # This allows Docker to cache these layers, speeding up builds if dependencies haven't changed.
-COPY package.json npm.lock ./
+COPY package.json yarn.lock ./
 
-# Install project dependencies using npm.
-RUN npm install --frozen-lockfile
+# Install project dependencies using Yarn.
+RUN yarn install --frozen-lockfile
 
 # Copy the rest of the application source code.
 COPY . .
 
-# Build the React application for production using npm.
+# Build the React application for production using Yarn.
 # This command generates the static files in the 'build' directory.
-RUN npm build
+RUN yarn build
 
 # Stage 2: Serve the React application with Nginx
 # Use a lightweight Nginx image to serve the static files.
