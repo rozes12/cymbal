@@ -93,7 +93,7 @@ import { Link, useLocation } from "react-router-dom";
 // Define the URL for your highLevelCategoryMap.json in the GCP bucket
 // IMPORTANT: Replace 'your-gcp-bucket-name' with your actual bucket name
 // and 'path/to/your/file' if your file is in a subfolder.
-const GCS_CATEGORY_MAP_URL = "https://storage.googleapis.com/cym1/data/highLevelCategoryMap.json";
+const GCS_CATEGORY_MAP_URL = "https://storage.googleapis.com/cymre/data/highLevelCategoryMap.json";
 // Example: "https://storage.googleapis.com/cym1/data/highLevelCategoryMap.json" if it's in the 'data' subfolder
 
 const categoryAliasMap = {

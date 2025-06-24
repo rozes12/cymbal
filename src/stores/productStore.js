@@ -38,7 +38,7 @@ export const useProductStore = create((set) => ({
   fetchProducts: async () => {
     try {
       const res = await fetch(
-        "https://storage.googleapis.com/cym1/data/merged_products.json"
+        "https://storage.googleapis.com/cymre/data/merged_products.json"
       );
       const data = await res.json();
       set({ products: data, loading: false });
