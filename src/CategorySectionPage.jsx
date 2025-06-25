@@ -12,7 +12,7 @@ export default function CategorySectionPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const api_url = "http://10.128.0.2:5000"; // Your API URL
+  const api_url = "https://10.128.0.2:5000"; // Your API URL
 
   const handleSubmit = async () => {
     if (!prompt.trim()) {
