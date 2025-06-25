@@ -78,7 +78,7 @@ FROM nginx:alpine
 
 
 # Copy the Nginx configuration TEMPLATE to the correct location for envsubst
-COPY default.conf.template /etc/nginx/templates/default.conf.template # <--- IMPORTANT CHANGE
+COPY default.conf.template /etc/nginx/templates/default.conf.template 
 
 # Copy the built React application from the 'react-builder' stage
 COPY --from=react-builder /app/frontend/dist /usr/share/nginx/html
