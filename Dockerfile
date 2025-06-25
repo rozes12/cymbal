@@ -65,23 +65,15 @@ RUN npm run build
 # Uses a lightweight Nginx image to serve the static content.
 FROM nginx:alpine
 
-# # Copy the Nginx configuration file into the container.
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# # Copy the built React application from the 'react-builder' stage
-# # into the Nginx default web server root directory.
-# COPY --from=react-builder /app/frontend/dist /usr/share/nginx/html
-
-# # Expose port 8080.
-# EXPOSE 8080
-
-
-
-# Copy the Nginx configuration TEMPLATE to the correct location for envsubst
-COPY default.conf.template /etc/nginx/templates/default.conf.template 
+# Copy the Nginx configuration file into the container.
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy the built React application from the 'react-builder' stage
+# into the Nginx default web server root directory.
 COPY --from=react-builder /app/frontend/dist /usr/share/nginx/html
 
-# Expose port. Cloud Run will provide the PORT env var to Nginx via envsubst.
-EXPOSE 8080 
+# Expose port 8080.
+EXPOSE 8080
+
+
+
