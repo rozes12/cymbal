@@ -58,6 +58,7 @@ import CartPage from "@/pages/CartPage";
 import AccountPage from "@/pages/AccountPage";
 import AdminLoginPage from "@/pages/AdminLoginPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
+import CategorySectionPage from "@/pages/Admin/CategorySectionPage"; // <--- NEW IMPORT for the Category Section Page
 import { useProductStore } from "@/stores/productStore";
 
 export default function App() {
@@ -125,6 +126,8 @@ export default function App() {
             <Route path="/account" element={<AccountPage />} />
             <Route path="/admin-login" element={<AdminLoginPage />} />
             <Route path="/admin" element={<AdminDashboardPage />} />
+            {/* NEW ROUTE for Category Section Page */}
+            <Route path="/admin/category-section" element={<CategorySectionPage />} />
           </Routes>
         </main>
         <Footer />

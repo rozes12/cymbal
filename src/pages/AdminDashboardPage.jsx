@@ -1,6 +1,7 @@
 import React from "react";
 import { useProductStore } from "@/stores/productStore";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom"; // Import Link
 
 export default function AdminDashboardPage() {
   const { products, approveProduct, deleteProduct } = useProductStore();
@@ -8,6 +9,13 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="p-8">
+      {/* New button for Category Section */}
+      <div className="mb-4">
+        <Link to="/admin/category-section"> {/* Assuming this will be the path to your new page */}
+          <Button>Go to Category Section</Button>
+        </Link>
+      </div>
+
       <h2 className="text-2xl font-bold mb-4">Pending Product Approvals</h2>
       {pendingProducts.length === 0 ? (
         <p>No pending products.</p>
