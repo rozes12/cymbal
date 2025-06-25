@@ -7,6 +7,9 @@ const connection = mysql.createConnection({
   socketPath: process.env.DB_SOCKET_PATH, // like /cloudsql/project:region:instance
 });
 
+
+
+
 connection.connect((err) => {
   if (err) {
     console.error("❌ DB connection failed:", err);

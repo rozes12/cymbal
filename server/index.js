@@ -3,7 +3,7 @@ import cors from 'cors';
 import authRoutes from './routes/auth.js';
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8081;
 
 app.use(cors({
   origin: ['http://localhost:5173', 'https://my-cymbal-app-723767509826.us-west1.run.app'], // Your Cloud Run frontend URL

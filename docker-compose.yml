@@ -11,7 +11,7 @@ services:
     environment:
       # How your frontend React app in the browser will call the backend API
       # 'backend' refers to the service name in Docker Compose's internal DNS
-      - VITE_REACT_APP_API_URL=http://backend:8080 # Update this for Vite if you're using it
+      - VITE_REACT_APP_API_URL=http://backend:8081 # Update this for Vite if you're using it
     depends_on:
       - backend
 
