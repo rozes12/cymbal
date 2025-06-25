@@ -13,59 +13,8 @@ export default function HomePage() {
     <div>
       <HomeHero />
 
-      {/* Why Shop With Us Section */}
-      <section className="py-12 px-6 max-w-7xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Why Shop With Us?</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-            <h3 className="text-xl font-semibold mb-2">Fast Shipping</h3>
-            <p className="text-gray-600">We deliver quickly and reliably across the country.</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-            <h3 className="text-xl font-semibold mb-2">Great Quality</h3>
-            <p className="text-gray-600">Our products are handpicked to ensure top-tier quality.</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-            <h3 className="text-xl font-semibold mb-2">Affordable Prices</h3>
-            <p className="text-gray-600">Get more for less with amazing deals all year round.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Products Section */}
-      <section className="py-12 px-6 max-w-7xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Featured Products</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {featuredProducts.map((product) => (
-            <Link
-              to={`/products/${product.id}`}
-              key={product.id}
-              className="bg-white p-4 border rounded-lg shadow hover:shadow-md transition"
-            >
-              <div className="bg-white border p-2 flex items-center justify-center rounded-md h-[200px]">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="object-contain max-h-full max-w-full"
-                  style={{ imageRendering: "auto" }}
-                />
-              </div>
-              <h3 className="mt-4 text-lg font-bold text-gray-800">{product.name}</h3>
-              <p className="text-gray-600">${product.price}</p>
-            </Link>
-          ))}
-        </div>
-
-        <div className="mt-8 text-center">
-          <Link to="/products">
-            <button className="bg-indigo-600 text-white font-semibold py-3 px-6 rounded hover:bg-indigo-700 transition">
-              View All Products
-            </button>
-          </Link>
-        </div>
-      </section>
-
-      {/* Categories Section */}
+    
+ {/* Categories Section */}
 <section className="py-12 px-6 max-w-7xl mx-auto">
   <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">Shop by Category</h2>
   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 text-center">
@@ -100,6 +49,59 @@ export default function HomePage() {
     </Link>
   </div>
 </section>
+
+      {/* Featured Products Section */}
+      <section className="py-12 px-6 max-w-7xl mx-auto">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">Featured Products</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {featuredProducts.map((product) => (
+            <Link
+              to={`/products/${product.id}`}
+              key={product.id}
+              className="bg-white p-4 border rounded-lg shadow hover:shadow-md transition"
+            >
+              <div className="bg-white border p-2 flex items-center justify-center rounded-md h-[200px]">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="object-contain max-h-full max-w-full"
+                  style={{ imageRendering: "auto" }}
+                />
+              </div>
+              <h3 className="mt-4 text-lg font-bold text-gray-800">{product.name}</h3>
+              <p className="text-gray-600">${product.price}</p>
+            </Link>
+          ))}
+        </div>
+
+        <div className="mt-8 text-center">
+          <Link to="/products">
+            <button className="bg-indigo-600 text-white font-semibold py-3 px-6 rounded hover:bg-indigo-700 transition">
+              View All Products
+            </button>
+          </Link>
+        </div>
+      </section>
+
+     
+  {/* Why Shop With Us Section */}
+      <section className="py-12 px-6 max-w-7xl mx-auto">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">Why Shop With Us?</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+          <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+            <h3 className="text-xl font-semibold mb-2">Fast Shipping</h3>
+            <p className="text-gray-600">We deliver quickly and reliably across the country.</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+            <h3 className="text-xl font-semibold mb-2">Great Quality</h3>
+            <p className="text-gray-600">Our products are handpicked to ensure top-tier quality.</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+            <h3 className="text-xl font-semibold mb-2">Affordable Prices</h3>
+            <p className="text-gray-600">Get more for less with amazing deals all year round.</p>
+          </div>
+        </div>
+      </section>
 
 
       {/* Final CTA Section */}
