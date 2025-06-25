@@ -65,53 +65,23 @@ RUN npm run build
 # Uses a lightweight Nginx image to serve the static content.
 FROM nginx:alpine
 
-# Copy the Nginx configuration file into the container.
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# # Copy the Nginx configuration file into the container.
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy the built React application from the 'react-builder' stage
-# into the Nginx default web server root directory.
-COPY --from=react-builder /app/frontend/dist /usr/share/nginx/html
+# # Copy the built React application from the 'react-builder' stage
+# # into the Nginx default web server root directory.
+# COPY --from=react-builder /app/frontend/dist /usr/share/nginx/html
 
-# Expose port 8080.
-EXPOSE 8080
-
-
-
-# -------- Stage 1: Build React Frontend --------
-# FROM node:20-alpine AS react-builder
-
-# WORKDIR /app
-
-# # Copy only frontend package files first for caching
-# COPY package.json package-lock.json ./
-# RUN npm install
-
-# # Copy the rest of the files (including frontend and server)
-# COPY . .
-
-# # Build the React frontend
-# RUN npm run build
-
-# # -------- Stage 2: Build and Run Backend --------
-# FROM node:20-alpine
-
-# WORKDIR /app
-
-# # Install production dependencies for backend
-# COPY package.json package-lock.json ./
-# RUN npm install --omit=dev
-
-# # Copy all source files (frontend build + backend)
-# COPY . .
-
-# # Copy frontend build to public folder (you can serve it via Express)
-# COPY --from=react-builder /app/dist ./dist
-
-# # Set environment variable to production
-# ENV NODE_ENV=production
-
-# # Expose port
+# # Expose port 8080.
 # EXPOSE 8080
 
-# # Run your Express backend
-# CMD ["node", "server/index.js"]
+
+
+# Copy the Nginx configuration TEMPLATE to the correct location for envsubst
+COPY default.conf.template /etc/nginx/templates/default.conf.template # <--- IMPORTANT CHANGE
+
+# Copy the built React application from the 'react-builder' stage
+COPY --from=react-builder /app/frontend/dist /usr/share/nginx/html
+
+# Expose port. Cloud Run will provide the PORT env var to Nginx via envsubst.
+EXPOSE 8080 

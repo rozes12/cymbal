@@ -82,8 +82,9 @@ export default function AccountPage({ onLoginSuccess }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const API_BASE = "https://my-cymbal-app-723767509826.us-west1.run.app"; // ⚠️ Replace with your real Cloud Run URL
+  // const API_BASE = "https://my-cymbal-app-723767509826.us-west1.run.app"; // ⚠️ Replace with your real Cloud Run URL
 
+  const API_BASE = import.meta.env.VITE_REACT_APP_API_URL;
   const handleLogin = async () => {
     setErrorMessage('');
     setSuccessMessage('');

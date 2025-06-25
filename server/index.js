@@ -57,35 +57,63 @@
 // });
 
 
-import path from 'path';
-import { fileURLToPath } from 'url';
+// import path from 'path';
+// import { fileURLToPath } from 'url';
+// import express from 'express';
+// import cors from 'cors';
+// import authRoutes from './routes/auth.js';
+
+// const app = express();
+// const PORT = process.env.PORT || 8080;
+
+// // Enable CORS
+// app.use(cors({
+//   origin: ['http://localhost:5173', 'https://your-app-url'],
+//   methods: ['GET', 'POST', 'OPTIONS'],
+//   credentials: true,
+//   allowedHeaders: ['Content-Type'],
+// }));
+
+// app.use(express.json());
+// app.use('/api', authRoutes);
+
+// // Serve frontend (React build)
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+
+// app.use(express.static(path.join(__dirname, '../dist'))); // serve frontend files
+
+// // Fallback for React Router (SPA)
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../dist/index.html'));
+// });
+
+// app.listen(PORT, () => {
+//   console.log(`✅ Server running on port ${PORT}`);
+// });
+
+
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8080; // Keep listening on 8080 for Cloud Run/Docker Compose
 
-// Enable CORS
+// Enable CORS for your frontend origins
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://your-app-url'],
-  methods: ['GET', 'POST', 'OPTIONS'],
+  origin: ['http://localhost:5173', 'https://my-cymbal-app-723767509826.us-west1.run.app'], // Your Cloud Run frontend URL
+  methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'], // Add all methods your API will use
   credentials: true,
-  allowedHeaders: ['Content-Type'],
+  allowedHeaders: ['Content-Type', 'Authorization'], // Add Authorization if you use tokens
 }));
+app.options('*', cors()); // Handle preflight requests
 
 app.use(express.json());
 app.use('/api', authRoutes);
 
-// Serve frontend (React build)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-app.use(express.static(path.join(__dirname, '../dist'))); // serve frontend files
-
-// Fallback for React Router (SPA)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
+app.get('/', (req, res) => {
+  res.send('Cymbal Backend API running.'); // Simple health check/status
 });
 
 app.listen(PORT, () => {
