@@ -25,14 +25,21 @@ RUN npm install
 # Copy the rest of your React application files.
 COPY . .
 
+# --- NEW DIAGNOSTIC STEP: DIRECTLY CREATE .env FILE WITH HARDCODED URL ---
+# This will force the URL into the build, bypassing the ARG/gcloud issue for this test.
+# Vite automatically picks up environment variables from .env files during build.
+RUN echo "VITE_REACT_APP_API_URL=https://cymbalback-723767509826.us-west1.run.app" > .env && \
+    cat .env && \
+    echo "DEBUG: .env file created with hardcoded VITE_REACT_APP_API_URL."
+# --- END NEW DIAGNOSTIC STEP ---
 
 # --- ADD THIS NEW LINE FOR DIAGNOSIS ---
 RUN echo "DEBUG: VITE_REACT_APP_API_URL as seen in Docker build: '${VITE_REACT_APP_API_URL}'"
 # --- END NEW LINE ---
 
 # Run the build command for your Vite React app.
-# RUN npm run build
-RUN VITE_REACT_APP_API_URL=${VITE_REACT_APP_API_URL} npm run build
+RUN npm run build
+
 
 # # Stage 2: Serve the Static React App with Nginx
 # # Uses a lightweight Nginx image to serve the static content.
