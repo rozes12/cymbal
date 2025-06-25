@@ -1,6 +1,3 @@
-
-
-
 import React from "react";
 import HomeHero from "@/components/ui/HomeHero";
 import { Link } from "react-router-dom";
@@ -113,8 +110,18 @@ export default function HomePage() {
             View All Products
           </button>
         </Link>
+        {/* NEW BUTTON TO OPEN IMAGEN.HTML */}
+        <div className="mt-4"> {/* Added a div for spacing */}
+            <a
+              href="/imagen.html" // Path relative to your public directory
+              target="_blank"    // Opens in a new tab
+              rel="noopener noreferrer" // Recommended for target="_blank" for security
+              className="bg-purple-600 text-white font-semibold py-3 px-6 rounded hover:bg-purple-700 transition inline-block" // Tailwind classes for styling
+            >
+              Try AI Image Editor
+            </a>
+        </div>
       </section>
     </div>
   );
 }
-
