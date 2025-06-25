@@ -1,12 +1,12 @@
 // AdminDashboardPage.jsx
-import React, { useState } from "react"; // Import useState
+import React, { useState } from "react";
 import { useProductStore } from "@/stores/productStore";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom"; // Import Link
+import { Link } from "react-router-dom";
 
 export default function AdminDashboardPage() {
   const { products, approveProduct, deleteProduct } = useProductStore();
-  const [activeTab, setActiveTab] = useState('generate'); // Default to 'generate' or 'approvals' as preferred
+  const [activeTab, setActiveTab] = useState('generate'); // Default to 'generate'
 
   const pendingProducts = products.filter(p => !p.approved).slice(0, 20);
 
@@ -16,7 +16,6 @@ export default function AdminDashboardPage() {
       <div className="mb-6 flex space-x-4 border-b pb-2">
         <Button
           onClick={() => setActiveTab('generate')}
-          // Use variant to visually indicate active tab (assuming shadcn Button supports 'default' and 'outline')
           variant={activeTab === 'generate' ? "default" : "outline"}
         >
           Generate Products
@@ -34,27 +33,26 @@ export default function AdminDashboardPage() {
         <div className="mb-4">
           <h2 className="text-2xl font-bold mb-4">Product Generation Tools</h2>
           <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-            {/* Existing "Go to Category Section" Button */}
+            {/* Renamed "Go to Category Section" */}
             <Link to="/admin/category-section">
-              <Button className="w-full sm:w-auto">Go to Category Section (Attribute Gen)</Button>
+              <Button className="w-full sm:w-auto">Attribute Generation Prompting</Button>
             </Link>
 
-            {/* NEW "Try AI Image Editor" Button */}
-            {/* IMPORTANT: Use <a> tag for external HTML files */}
+            {/* Renamed "Try AI Image Editor" */}
             <a
-              href="/imagen.html" // Path relative to your public directory
-              target="_blank"    // Opens in a new tab
-              rel="noopener noreferrer" // Recommended for target="_blank" for security
+              href="/imagen.html"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <Button className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white">
-                Try AI Image Editor
+                AI Image Editor
               </Button>
             </a>
           </div>
         </div>
       )}
 
-      {/* Content for 'Product Approvals' Tab */}
+      {/* Content for 'Product Approvals' Tab (unchanged) */}
       {activeTab === 'approvals' && (
         <>
           <h2 className="text-2xl font-bold mb-4">Pending Product Approvals</h2>
