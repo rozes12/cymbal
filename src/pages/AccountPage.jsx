@@ -94,7 +94,7 @@ export default function AccountPage({ onLoginSuccess }) {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/login`, {
+      const res = await fetch(`${API_BASE}/api/login`, {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -124,7 +124,7 @@ export default function AccountPage({ onLoginSuccess }) {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/register`, {
+      const res = await fetch(`${API_BASE}/api/register`, {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
