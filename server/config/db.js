@@ -28,7 +28,7 @@ import mysql from "mysql2/promise"; // Keep this! This is correct for Promises.
 // Create a connection pool instead of a single connection.
 // Pools are highly recommended for Cloud Run/serverless to manage connections efficiently.
 const pool = mysql.createPool({
-  host: 'localhost', // Cloud SQL Proxy listens on localhost
+  // host: 'localhost', // Cloud SQL Proxy listens on localhost
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
