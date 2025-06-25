@@ -1,8 +1,10 @@
+// src/CategorySectionPage.jsx
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button"; // Assuming you have a Button component
-import { Textarea } from "@/components/ui/textarea"; // Assuming you have a Textarea component (from shadcn/ui)
-import { Label } from "@/components/ui/label"; // Assuming you have a Label component (from shadcn/ui)
-import { ScrollArea } from "@/components/ui/scroll-area"; // For scrollable output if needed
+// Remove or comment out these imports if you're not using shadcn/ui:
+// import { Button } from "@/components/ui/button"; // Assuming you have a Button component
+// import { Textarea } from "@/components/ui/textarea";
+// import { Label } from "@/components/ui/label";
+// import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function CategorySectionPage() {
   const [prompt, setPrompt] = useState("");
@@ -26,19 +28,18 @@ export default function CategorySectionPage() {
       const response = await fetch(api_url, {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded", // Required for curl -d "key=value"
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: `prompt=${encodeURIComponent(prompt)}`, // URL-encode the prompt
+        body: `prompt=${encodeURIComponent(prompt)}`,
       });
 
       if (!response.ok) {
-        // Handle HTTP errors
         const errorText = await response.text();
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
-      const data = await response.json(); // Assuming the API returns JSON
-      setOutput(JSON.stringify(data, null, 2)); // Pretty print JSON output
+      const data = await response.json();
+      setOutput(JSON.stringify(data, null, 2));
     } catch (err) {
       console.error("Error fetching product attributes:", err);
       setError(`Failed to fetch attributes: ${err.message}. Please check the API server and your input.`);
@@ -49,42 +50,42 @@ export default function CategorySectionPage() {
   };
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Product Category & Attributes Section</h2>
+    <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}> {/* Basic inline styling */}
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Product Category & Attributes Section</h2>
 
-      <div className="mb-6">
-        <Label htmlFor="product-prompt" className="mb-2 block">
+      <div style={{ marginBottom: '1.5rem' }}>
+        <label htmlFor="product-prompt" style={{ display: 'block', marginBottom: '0.5rem' }}>
           Enter Product Description:
-        </Label>
-        <Textarea
+        </label>
+        <textarea
           id="product-prompt"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="e.g., A lightweight, waterproof jacket with breathable fabric, perfect for hiking in all weather conditions."
           rows={6}
-          className="w-full"
-        />
-        <Button onClick={handleSubmit} disabled={isLoading} className="mt-4">
+          style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
+        ></textarea>
+        <button onClick={handleSubmit} disabled={isLoading} style={{ marginTop: '1rem', padding: '0.5rem 1rem', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
           {isLoading ? "Generating..." : "Get Attributes"}
-        </Button>
+        </button>
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
-          <strong className="font-bold">Error!</strong>
-          <span className="block sm:inline"> {error}</span>
+        <div style={{ backgroundColor: '#fee2e2', border: '1px solid #fca5a5', color: '#dc2626', padding: '1rem', borderRadius: '0.25rem', position: 'relative', marginBottom: '1.5rem' }} role="alert">
+          <strong>Error!</strong>
+          <span> {error}</span>
         </div>
       )}
 
-      <div className="mb-6">
-        <Label htmlFor="output-box" className="mb-2 block">
+      <div style={{ marginBottom: '1.5rem' }}>
+        <label htmlFor="output-box" style={{ display: 'block', marginBottom: '0.5rem' }}>
           Output (Product Attributes):
-        </Label>
-        <ScrollArea className="h-64 border rounded bg-gray-50 p-4 font-mono text-sm">
-          <pre className="whitespace-pre-wrap" id="output-box">
+        </label>
+        <div style={{ height: '256px', overflowY: 'auto', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: '#f9fafb', padding: '1rem', fontFamily: 'monospace', fontSize: '0.875rem' }}>
+          <pre style={{ whiteSpace: 'pre-wrap' }} id="output-box">
             {output || (isLoading ? "..." : "No output yet. Enter a description and click 'Get Attributes'.")}
           </pre>
-        </ScrollArea>
+        </div>
       </div>
     </div>
   );
