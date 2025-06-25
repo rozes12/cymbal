@@ -4,12 +4,9 @@
 FROM node:20-alpine AS react-builder
 
 
-# --- ADD THESE TWO LINES ---
 # 1. Declare a build argument to receive the variable from Cloud Build.
 ARG VITE_REACT_APP_API_URL
-# 2. Set it as an environment variable inside the container for Vite to pick up.
-# ENV VITE_REACT_APP_API_URL=${VITE_REACT_APP_API_URL}
-# --- END ADDITIONS ---
+
 
 
 # Set the working directory inside the container for the frontend build.
@@ -45,8 +42,6 @@ RUN npm run build
 # # Uses a lightweight Nginx image to serve the static content.
 FROM nginx:alpine
 
-# # Copy the Nginx configuration file into the container.
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Install envsubst for substituting environment variables into Nginx config
 RUN apk add --no-cache gettext
