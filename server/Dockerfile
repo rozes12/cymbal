@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # Expose port (Cloud Run uses PORT env variable, but good to expose 8080)
-EXPOSE 8081
+EXPOSE 8080
 
 # Start the server
 CMD ["node", "index.js"]
