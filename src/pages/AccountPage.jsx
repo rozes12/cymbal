@@ -143,7 +143,6 @@
 //   );
 // }
 
-
 // src/pages/AccountPage.jsx
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -180,6 +179,7 @@ export default function AccountPage() {
   const API_BASE = import.meta.env.VITE_REACT_APP_API_URL;
 
   const handleLogin = async () => {
+    // Always clear previous messages at the start of a new attempt
     setErrorMessage('');
     setSuccessMessage('');
 
@@ -198,17 +198,23 @@ export default function AccountPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setSuccessMessage(data.message || 'Login successful!');
+        // Backend responded with a success status code (2xx)
         if (data.token) {
-          setUserToken(data.token); // Use user store's setUserToken
+          // If a token IS present in the response, then it's a true success.
+          setSuccessMessage(data.message || 'Login successful!');
+          setUserToken(data.token); // Use user store's setUserToken to save the token
           navigate('/'); // Redirect to the home page after user login
         } else {
-            setErrorMessage('Login successful, but no authentication token was received.');
+          // If the backend responded with success (2xx) but DID NOT provide a token.
+          // This should be treated as an error for the login process, as no authentication was established.
+          setErrorMessage(data.error || 'Login successful, but no authentication token was received from the server. Please contact support.');
         }
       } else {
+        // Backend responded with an error status code (4xx or 5xx)
         setErrorMessage(data.error || 'Login failed. Please check your credentials.');
       }
     } catch (error) {
+      // Catch network errors or issues before the response from the server
       console.error('Login error:', error);
       setErrorMessage('An unexpected error occurred during login. Please try again.');
     }
@@ -253,6 +259,7 @@ export default function AccountPage() {
     <div className="p-8 max-w-md mx-auto bg-white shadow-lg rounded-xl mt-10">
       <h2 className="text-3xl font-extrabold text-gray-900 mb-6 text-center">User Account</h2>
 
+      {/* Message Display */}
       {errorMessage && <MessageDisplay message={errorMessage} type="error" />}
       {successMessage && <MessageDisplay message={successMessage} type="success" />}
 
