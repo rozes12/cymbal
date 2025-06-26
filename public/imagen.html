@@ -5,17 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Product Image Editor - Preview</title>
     
+    <!-- Load React and Babel for JSX transpilation -->
     <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+    <!-- Google Fonts for better UI -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
 
+    <!-- Styles for the application -->
     <style>
         body {
-            margin: 0;
+            margin: 0;  
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
                 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
                 sans-serif;
@@ -383,59 +386,48 @@
                 reader.onerror = error => reject(error);
             });
         }
-        
+
+        const API_BASE_URL = 'https://imagen-ai-723767509826.us-central1.run.app/'; 
+            
         // --- From api.js (Mock API) ---
         async function processImageRequest(params) {
-            console.log("🚀 Mock API called with params:", params);
-            // This part is for demonstration only. It simulates the backend.
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
-
-            const { uploaded_image_base64, action, background_color_hex, background_prompt, product_prompt, num_output_images } = params;
-
-            const results = [];
-            const img = new Image();
-            await new Promise((resolve, reject) => { 
-                img.onload = resolve;
-                img.onerror = reject;
-                img.src = uploaded_image_base64; 
+        console.log("🚀 Calling Cloud Run API with params:", params);
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/process_image`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // If your Cloud Run service requires authentication (e.g., if not public),
+                    // you'll need to add an Authorization header here.
+                    // Example: 'Authorization': 'Bearer YOUR_AUTH_TOKEN_HERE'
+                },
+                body: JSON.stringify(params) // Send the parameters as JSON
             });
 
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
+            const result = await response.json();
 
-            for (let i = 0; i < num_output_images; i++) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                if (action === 'background_color' && Array.isArray(background_color_hex)) {
-                    ctx.fillStyle = background_color_hex[i % background_color_hex.length];
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                } else if (action === 'background_generated') {
-                    const mockBgColors = ['#87CEEB', '#2E8B57', '#4682B4', '#D2B48C', '#6A5ACD'];
-                    ctx.fillStyle = mockBgColors[i % mockBgColors.length];
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                } else if (action === 'product_edit') {
-                    ctx.filter = `hue-rotate(${i * 60}deg) saturate(1.5)`;
+            if (response.ok) { // Check if the HTTP status code is 2xx (successful)
+                console.log('✅ Cloud Run API returned:', result);
+                if (result.processed_images_base64 && Array.isArray(result.processed_images_base64)) {
+                    return result.processed_images_base64;
+                } else {
+                    // Handle cases where the API might return successfully but not with the expected image format
+                    console.error("API response missing 'processed_images_base64' array or it's not an array:", result);
+                    throw new Error("Invalid response from API. Please try again or check the backend logs.");
                 }
-
-                ctx.drawImage(img, 0, 0);
-                ctx.filter = 'none';
-
-                ctx.font = 'bold 24px Poppins';
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-                ctx.lineWidth = 4;
-                const text = `Mock Result ${i + 1}`;
-                ctx.strokeText(text, 20, 40);
-                ctx.fillText(text, 20, 40);
-
-                results.push(canvas.toDataURL('image/png'));
+            } else {
+                // If the response is not OK, throw an error with details from the API
+                const errorDetail = result.detail || result.message || JSON.stringify(result);
+                console.error('API responded with an error:', errorDetail);
+                throw new Error(`API Error: ${errorDetail}`);
             }
-
-            console.log(`✅ Mock API returned ${results.length} simulated images.`);
-            return results;
-        };
+        } catch (error) {
+            console.error('An error occurred during the API call:', error);
+            // Re-throw to be caught by the runImageProcessing function's catch block
+            throw new Error(`Network or processing error: ${error.message || 'Unknown error'}`);
+        }
+    }
 
         // --- From App.js ---
         const { useState, useCallback } = React;
@@ -460,43 +452,26 @@
             </div>
         );
 
-        const MainMenu = ({ onChoice, uploadedImage, onReset }) => { // onReset is new prop here
-             const handleGenerateAttributes = () => {
-                if (uploadedImage) {
-                    // Store the image in sessionStorage and redirect
-                    sessionStorage.setItem('imageForAttributes', uploadedImage);
-                    // Navigate to the CategorySectionPage route
-                    // The path needs to be absolute from the root of the React app
-                    window.location.href = '/admin/category-section-from-image';
-                } else {
-                    alert('Please upload an image first.');
-                }
-            };
-            return (
-                <div className="container">
-                    <div className="image-preview-box card">
-                        <h3>Your Image</h3>
-                        <img src={uploadedImage} alt="Uploaded product" className="image-preview" />
-                    </div>
-                    <div className="main-menu-container card">
-                        <h2>Step 2: Choose an Action</h2>
-                        <div className="button-group">
-                            <button className="button" onClick={() => onChoice('changeBg')}>
-                                <span role="img" aria-label="palette">🎨</span> Change Background
-                            </button>
-                            <button className="button" onClick={() => onChoice('generateNew')}>
-                                <span role="img" aria-label="sparkles">✨</span> Generate New Images
-                            </button>
-                            {/* NEW BUTTON FOR ATTRIBUTE GENERATION */}
-                            <button className="button" onClick={handleGenerateAttributes}>
-                                <span role="img" aria-label="clipboard">📋</span> Generate Product Attributes
-                            </button>
-                            <button className="button secondary" onClick={onReset}>Start Over</button>
-                        </div>
+        const MainMenu = ({ onChoice, uploadedImage, onReset }) => (
+            <div className="container">
+                <div className="image-preview-box card">
+                    <h3>Your Image</h3>
+                    <img src={uploadedImage} alt="Uploaded product" className="image-preview" />
+                </div>
+                <div className="main-menu-container card">
+                    <h2>Step 2: Choose an Action</h2>
+                    <div className="button-group">
+                        <button className="button" onClick={() => onChoice('changeBg')}>
+                            <span role="img" aria-label="palette">🎨</span> Change Background
+                        </button>
+                        <button className="button" onClick={() => onChoice('generateNew')}>
+                            <span role="img" aria-label="sparkles">✨</span> Generate New Images
+                        </button>
+                        <button className="button secondary" onClick={onReset}>Start Over</button>
                     </div>
                 </div>
-            );
-        };
+            </div>
+        );
 
         const BackgroundChanger = ({ onGenerate, onBack }) => {
             const [bgChoice, setBgChoice] = useState(null);
@@ -664,77 +639,117 @@
                 setStep('menu');
             };
 
-            const handleMenuChoice = async (choice) => {
-                setError(null);
-                setGeneratedImages([]);
-                setSelectedImage(null);
-                setFinalImage(null);
-
-                if (choice === 'changeBg') {
-                    setStep('changeBg');
-                } else if (choice === 'generateNew') {
-                    setStep('generateNew');
-                }
+            const handleMenuChoice = (choice) => {
+                setStep(choice);
             };
 
-            const handleGenerate = async (params) => {
+            const runImageProcessing = async (params) => {
                 setIsLoading(true);
                 setError(null);
+                setSelectedImage(null);
+                setStep('processing');
                 try {
-                    let results;
-                    if (params.type === 'palette') {
-                        // For palette, generate one image for each shade
-                        results = [];
-                        for (const hex of params.shades) {
-                            const tempResults = await processImageRequest({
-                                uploaded_image_base64: uploadedImage,
-                                action: 'background_color',
-                                background_color_hex: [hex], // Pass single hex for single image
-                                num_output_images: 1,
-                            });
-                            results.push(tempResults[0]); // Take the first result
-                        }
-                    } else if (params.type === 'prompt') {
-                        results = await processImageRequest({
-                            uploaded_image_base64: uploadedImage,
-                            action: 'background_generated',
-                            background_prompt: params.prompt,
-                            num_output_images: 5,
-                        });
-                    } else if (typeof params === 'string') { // Product prompt
-                        results = await processImageRequest({
-                            uploaded_image_base64: uploadedImage,
-                            action: 'product_edit', // Using 'product_edit' for product generation
-                            product_prompt: params,
-                            num_output_images: 5,
-                        });
+                    const results = await processImageRequest(params);
+                    if (!results || results.length === 0) {
+                        throw new Error("The AI failed to generate images. Please try a different prompt.");
                     }
                     setGeneratedImages(results);
-                    setStep('gallery');
+                    setStep('results');
                 } catch (err) {
-                    console.error("Error generating image:", err);
-                    setError(`Failed to generate images: ${err.message}`);
+                    console.error("Error processing image:", err);
+                    setError(err.message || "An unknown error occurred.");
+                    setStep('menu');
                 } finally {
                     setIsLoading(false);
                 }
             };
 
-            const handleSelectImage = (imgB64) => {
-                setSelectedImage(imgB64);
+            const handleBgGenerate = async ({ type, shades, prompt, hex }) => {
+                if (type === 'palette') {
+                    runImageProcessing({
+                        uploaded_image_base64: uploadedImage,
+                        action: 'background_color',
+                        background_color_hex: shades,
+                        num_output_images: 5,
+                    });
+                } else {
+                    runImageProcessing({
+                        uploaded_image_base64: uploadedImage,
+                        action: 'background_generated',
+                        background_prompt: prompt,
+                        num_output_images: 5,
+                    });
+                }
+            };
+
+            const handleProductGenerate = (prompt) => {
+                runImageProcessing({
+                    uploaded_image_base64: uploadedImage,
+                    action: 'product_edit',
+                    product_prompt: prompt,
+                    num_output_images: 5,
+                });
             };
 
             const handleConfirmSelection = () => {
-                setFinalImage(selectedImage);
-                setStep('final');
+                if (selectedImage) {
+                    setFinalImage(selectedImage);
+                    setStep('final');
+                }
             };
 
-            const handleSaveImage = (imgB64, filename) => {
+            const handleSaveImage = (base64, fileName) => {
                 const link = document.createElement('a');
-                link.href = imgB64;
-                link.download = filename;
+                link.href = base64;
+                link.download = fileName;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+            };
+
+            const renderStep = () => {
+                if (isLoading || step === 'processing') {
+                    return (
+                        <div className="container card">
+                            <h2>Generating your images...</h2>
+                            <p>This may take a moment. The AI is hard at work! ✨</p>
+                            <div className="loader"></div>
+                        </div>
+                    );
+                }
+
+                if (error) {
+                    return (
+                        <div className="container card error-box">
+                            <h2>An Error Occurred</h2>
+                            <p>{error}</p>
+                            <button className="button" onClick={() => { setError(null); setStep('menu'); }}>Try Again</button>
+                        </div>
+                    )
+                }
+
+                switch (step) {
+                    case 'upload':
+                        return <ImageUploader onImageUpload={handleImageUpload} />;
+                    case 'menu':
+                        return <MainMenu onChoice={handleMenuChoice} uploadedImage={uploadedImage} onReset={handleReset} />;
+                    case 'changeBg':
+                        return <BackgroundChanger onGenerate={handleBgGenerate} onBack={() => setStep('menu')} />;
+                    case 'generateNew':
+                        return <ProductGenerator onGenerate={handleProductGenerate} onBack={() => setStep('menu')} />;
+                    case 'results':
+                        return <ImageGallery
+                            images={generatedImages}
+                            selectedImage={selectedImage}
+                            onSelect={setSelectedImage}
+                            onConfirm={handleConfirmSelection}
+                            onReset={() => setStep('menu')}
+                        />;
+                    case 'final':
+                        return <FinalImageViewer image={finalImage} onSave={handleSaveImage} onReset={handleReset} />
+                    default:
+                        return <ImageUploader onImageUpload={handleImageUpload} />;
+                }
             };
 
             return (
@@ -742,51 +757,11 @@
                     <header>
                         <h1>AI Product Image Studio</h1>
                     </header>
-
-                    {isLoading && <div className="loader"></div>}
-                    {error && (
-                        <div className="card error-box">
-                            <h2>Error!</h2>
-                            <p>{error}</p>
-                        </div>
-                    )}
-
-                    {!isLoading && !error && (
-                        <>
-                            {step === 'upload' && <ImageUploader onImageUpload={handleImageUpload} />}
-                            {step === 'menu' && (
-                                <MainMenu
-                                    onChoice={handleMenuChoice}
-                                    uploadedImage={uploadedImage}
-                                    onReset={handleReset} // Pass onReset to MainMenu
-                                />
-                            )}
-                            {step === 'changeBg' && (
-                                <BackgroundChanger onGenerate={handleGenerate} onBack={() => setStep('menu')} />
-                            )}
-                            {step === 'generateNew' && (
-                                <ProductGenerator onGenerate={handleGenerate} onBack={() => setStep('menu')} />
-                            )}
-                            {step === 'gallery' && (
-                                <ImageGallery
-                                    images={generatedImages}
-                                    onSelect={handleSelectImage}
-                                    selectedImage={selectedImage}
-                                    onConfirm={handleConfirmSelection}
-                                    onReset={handleReset} // Pass onReset to ImageGallery
-                                />
-                            )}
-                            {step === 'final' && (
-                                <FinalImageViewer
-                                    image={finalImage}
-                                    onSave={handleSaveImage}
-                                    onReset={handleReset} // Pass onReset to FinalImageViewer
-                                />
-                            )}
-                        </>
-                    )}
+                    <main>
+                        {renderStep()}
+                    </main>
                     <footer>
-                        <p>&copy; 2024 Cymbal AI Product Studio. All rights reserved.</p>
+                        <p>Powered by React & AI</p>
                     </footer>
                 </div>
             );
