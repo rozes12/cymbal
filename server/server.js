@@ -1,19 +1,26 @@
 // Filename: server.js (or app.js)
 
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+// import { Storage } from '@google-cloud/storage'; // If you added this for search
+import * as natural from 'natural'; // If you added this for search (natural might need `* as`)
+
 // Import necessary modules
-const express = require('express');
-const cors = require('cors'); // Used to allow requests from your frontend's domain
-const bodyParser = require('body-parser'); // Used to parse JSON data sent in request bodies
+// const express = require('express');
+// const cors = require('cors'); // Used to allow requests from your frontend's domain
+// const bodyParser = require('body-parser'); // Used to parse JSON data sent in request bodies
 
 // Initialize the Express application
 const app = express();
-const PORT = 3001; // The port your backend server will listen on. You can choose any available port.
+const PORT = process.env.PORT || 8081; // The port your backend server will listen on. You can choose any available port.
 
 // --- In-memory "Database" for Demonstration ---
 // In a real production application, this would be replaced by a proper database
 // (e.g., Google Cloud Firestore, MongoDB, PostgreSQL, etc.)
 // This global array simulates a single shopping cart on the server.
 const serverCart = [];
+
 
 // --- Middleware Setup ---
 
