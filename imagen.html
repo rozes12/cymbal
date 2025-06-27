@@ -5,17 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Product Image Editor - Preview</title>
     
-    <!-- Load React and Babel for JSX transpilation -->
     <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Google Fonts for better UI -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <!-- Styles for the application -->
     <style>
         body {
             margin: 0;  
@@ -387,47 +384,45 @@
             });
         }
 
-        const API_BASE_URL = 'https://imagen-ai-723767509826.us-central1.run.app/'; 
+        // --- IMPORTANT: Update this URL to your Cloud Run service URL ---
+        const API_BASE_URL = 'https://imagen-ai-723767509826.us-central1.run.app'; 
             
-        // --- From api.js (Mock API) ---
+        // --- MODIFIED API function to expect the new response structure ---
         async function processImageRequest(params) {
-        console.log("🚀 Calling Cloud Run API with params:", params);
-        
-        try {
-            const response = await fetch(`${API_BASE_URL}/process_image`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // If your Cloud Run service requires authentication (e.g., if not public),
-                    // you'll need to add an Authorization header here.
-                    // Example: 'Authorization': 'Bearer YOUR_AUTH_TOKEN_HERE'
-                },
-                body: JSON.stringify(params) // Send the parameters as JSON
-            });
+            console.log("🚀 Calling Cloud Run API with params:", params);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/process_image`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(params)
+                });
 
-            const result = await response.json();
+                const result = await response.json();
 
-            if (response.ok) { // Check if the HTTP status code is 2xx (successful)
-                console.log('✅ Cloud Run API returned:', result);
-                if (result.processed_images_base64 && Array.isArray(result.processed_images_base64)) {
-                    return result.processed_images_base64;
+                if (response.ok) {
+                    console.log('✅ Cloud Run API returned:', result);
+                    // --- KEY CHANGE IN FRONTEND: Now expecting 'processed_images' as a list of objects ---
+                    // The backend sends 'processed_images', not 'processed_images_base64'
+                    if (result.processed_images && Array.isArray(result.processed_images)) {
+                        // Return the entire list of { base64_image, gcs_url } objects
+                        return result.processed_images; 
+                    } else {
+                        console.error("API response missing 'processed_images' array or it's not an array:", result);
+                        throw new Error("Invalid response from API. Please try again or check the backend logs.");
+                    }
                 } else {
-                    // Handle cases where the API might return successfully but not with the expected image format
-                    console.error("API response missing 'processed_images_base64' array or it's not an array:", result);
-                    throw new Error("Invalid response from API. Please try again or check the backend logs.");
+                    const errorDetail = result.detail || result.message || JSON.stringify(result);
+                    console.error('API responded with an error:', errorDetail);
+                    throw new Error(`API Error: ${errorDetail}`);
                 }
-            } else {
-                // If the response is not OK, throw an error with details from the API
-                const errorDetail = result.detail || result.message || JSON.stringify(result);
-                console.error('API responded with an error:', errorDetail);
-                throw new Error(`API Error: ${errorDetail}`);
+            } catch (error) {
+                console.error('An error occurred during the API call:', error);
+                throw new Error(`Network or processing error: ${error.message || 'Unknown error'}`);
             }
-        } catch (error) {
-            console.error('An error occurred during the API call:', error);
-            // Re-throw to be caught by the runImageProcessing function's catch block
-            throw new Error(`Network or processing error: ${error.message || 'Unknown error'}`);
         }
-    }
 
         // --- From App.js ---
         const { useState, useCallback } = React;
@@ -575,13 +570,14 @@
                 <h2>Step 3: Choose Your Favorite</h2>
                 <p>Select the image you'd like to keep, then click "Confirm Selection".</p>
                 <div className="image-gallery">
-                    {images.map((imgB64, index) => (
+                    {/* Map through the images array which now contains GCS URLs */}
+                    {images.map((imgUrl, index) => ( 
                         <div
                             key={index}
-                            className={`image-gallery-item ${selectedImage === imgB64 ? 'selected' : ''}`}
-                            onClick={() => onSelect(imgB64)}
+                            className={`image-gallery-item ${selectedImage === imgUrl ? 'selected' : ''}`}
+                            onClick={() => onSelect(imgUrl)}
                         >
-                            <img src={imgB64} alt={`Generated result ${index + 1}`} />
+                            <img src={imgUrl} alt={`Generated result ${index + 1}`} />
                             <div className="overlay">Option {index + 1}</div>
                         </div>
                     ))}
@@ -617,10 +613,10 @@
 
         function App() {
             const [step, setStep] = useState('upload');
-            const [uploadedImage, setUploadedImage] = useState(null);
-            const [generatedImages, setGeneratedImages] = useState([]);
-            const [selectedImage, setSelectedImage] = useState(null);
-            const [finalImage, setFinalImage] = useState(null);
+            const [uploadedImage, setUploadedImage] = useState(null); // This is still Base64 for the initial upload
+            const [generatedImages, setGeneratedImages] = useState([]); // This will now hold GCS URLs
+            const [selectedImage, setSelectedImage] = useState(null); // This will hold the selected GCS URL
+            const [finalImage, setFinalImage] = useState(null); // This will hold the final GCS URL
             const [isLoading, setIsLoading] = useState(false);
             const [error, setError] = useState(null);
 
@@ -647,18 +643,23 @@
                 setIsLoading(true);
                 setError(null);
                 setSelectedImage(null);
-                setStep('processing');
+                setStep('processing'); // Show loader
                 try {
-                    const results = await processImageRequest(params);
+                    // This function now expects and handles the new object structure { base64_image, gcs_url }
+                    const results = await processImageRequest(params); 
                     if (!results || results.length === 0) {
                         throw new Error("The AI failed to generate images. Please try a different prompt.");
                     }
-                    setGeneratedImages(results);
-                    setStep('results');
+                    
+                    // --- KEY CHANGE HERE: Extract only the GCS URLs for the gallery ---
+                    const gcsUrls = results.map(item => item.gcs_url);
+                    setGeneratedImages(gcsUrls); // Update state with generated image URLs
+                    setStep('results'); // Show image gallery
+
                 } catch (err) {
                     console.error("Error processing image:", err);
                     setError(err.message || "An unknown error occurred.");
-                    setStep('menu');
+                    setStep('menu'); // Go back to menu if an error occurs
                 } finally {
                     setIsLoading(false);
                 }
@@ -698,13 +699,24 @@
                 }
             };
 
-            const handleSaveImage = (base64, fileName) => {
-                const link = document.createElement('a');
-                link.href = base64;
-                link.download = fileName;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+            // This function needs to fetch the image data if it's a URL before saving
+            const handleSaveImage = (imageUrl, fileName) => {
+                fetch(imageUrl)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = fileName;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url); // Clean up the object URL
+                    })
+                    .catch(error => {
+                        console.error('Error downloading image:', error);
+                        alert('Failed to save image. Please try again.');
+                    });
             };
 
             const renderStep = () => {
@@ -739,7 +751,7 @@
                         return <ProductGenerator onGenerate={handleProductGenerate} onBack={() => setStep('menu')} />;
                     case 'results':
                         return <ImageGallery
-                            images={generatedImages}
+                            images={generatedImages} // This array now correctly holds GCS URLs
                             selectedImage={selectedImage}
                             onSelect={setSelectedImage}
                             onConfirm={handleConfirmSelection}
