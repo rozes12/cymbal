@@ -121,7 +121,7 @@
 
 // HomePage.jsx
 import React from "react";
-import HomeHero from "@/components/ui/HomeHero";
+import HomeHero from "@/components/ui/HomeHero"; // Ensure this import is correct
 import { Link } from "react-router-dom";
 import { useProductStore } from "@/stores/productStore";
 
@@ -136,7 +136,7 @@ export default function HomePage() {
 
   return (
     <div className="bg-gray-50 min-h-screen"> {/* Added a subtle background color for the whole page */}
-      <HomeHero />
+      <HomeHero /> {/* This is where the HomeHero component is rendered */}
 
       {/* Categories Section */}
       <section className="py-16 px-4 md:px-8 max-w-7xl mx-auto"> {/* Increased padding, adjusted max-width and horizontal padding */}
