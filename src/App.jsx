@@ -245,6 +245,8 @@ import UserProfilePage from "@/pages/UserProfilePage"; // Ensure you have this c
 import { useProductStore } from "@/stores/productStore";
 import { useUserAuthStore } from "@/stores/userAuthStore";
 import { useAdminAuthStore } from "@/stores/adminAuthStore"; // Import admin store
+import ImageEditorApp from './components/ImageEditor/ImageEditorApp'; // NEW: Your AI Image Editor
+
 
 export default function App() {
   const fetchProducts = useProductStore((state) => state.fetchProducts);
@@ -320,6 +322,7 @@ export default function App() {
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/products/:id" element={<ProductDetailsPage />} />
             <Route path="/cart" element={<CartPage />} />
+            <Route path="/admin/image-editor" element={<ImageEditorApp />} />
 
             {/* User Authentication Routes */}
             <Route

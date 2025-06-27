@@ -39,7 +39,7 @@ export default function AdminDashboardPage() {
             </Link>
 
             {/* Renamed "Try AI Image Editor" */}
-            <a
+            {/* <a
               href="./imagen.html" 
               target="_blank"
               rel="noopener noreferrer"
@@ -47,7 +47,12 @@ export default function AdminDashboardPage() {
               <Button className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white">
                 AI Image Editor
               </Button>
-            </a>
+            </a> */}
+            <Link to="/admin/image-editor">
+              <Button className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white">
+                AI Image Editor
+              </Button>
+            </Link>
           </div>
         </div>
       )}
