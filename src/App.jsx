@@ -344,7 +344,7 @@ export default function App() {
               element={isAdmin ? <AdminDashboardPage /> : <Navigate to="/admin-login" replace />}
             />
             <Route
-              path="/admin/category-section"
+              path="/admin/category-section-from-image"
               element={isAdmin ? <CategorySectionPage /> : <Navigate to="/admin-login" replace />}
             />
           </Routes>
