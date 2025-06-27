@@ -83,7 +83,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 // --- IMPORTANT: Replace this with your actual backend API URL ---
-const BACKEND_ADD_TO_CART_API = "https://your-backend-api-url.com/api/add-to-cart";
+const BACKEND_ADD_TO_CART_API = "http://localhost:3001/api/add-to-cart";
 // -----------------------------------------------------------------
 
 export const useCartStore = create(
