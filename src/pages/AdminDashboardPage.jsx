@@ -40,7 +40,7 @@ export default function AdminDashboardPage() {
 
             {/* Renamed "Try AI Image Editor" */}
             <a
-              href="/imagen.html"
+              href="./imagen.html"
               target="_blank"
               rel="noopener noreferrer"
             >
