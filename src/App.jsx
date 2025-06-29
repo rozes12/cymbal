@@ -360,7 +360,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import HomePage from "@/pages/HomePage";
-import ProductsPage from "@/pages/ProductPage";
+import ProductPage from "@/pages/ProductPage";
 import ProductDetailsPage from "@/pages/ProductDetailsPage";
 import CartPage from "@/pages/CartPage";
 import AccountPage from "@/pages/AccountPage";
@@ -449,7 +449,7 @@ export default function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
-            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/products" element={<ProductPage />} />
             <Route path="/products/:id" element={<ProductDetailsPage />} />
             <Route path="/cart" element={<CartPage />} />
 
