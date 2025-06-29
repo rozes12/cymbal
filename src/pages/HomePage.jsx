@@ -224,7 +224,6 @@
 //     </div>
 //   );
 // }
-
 // HomePage.jsx
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -232,12 +231,15 @@ import { useProductStore } from "@/stores/productStore";
 
 export default function HomePage() {
   const products = useProductStore((state) => state.products);
+  const loading = useProductStore((state) => state.loading);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [saleCategory, setSaleCategory] = useState('Fashion');
   const [currentSaleIndex, setCurrentSaleIndex] = useState(0);
 
-  // Shuffle products and take 6
-  const featuredProducts = [...products].sort(() => Math.random() - 0.5).slice(0, 6);
+  // Only process products if they're loaded and not empty
+  const featuredProducts = products.length > 0 
+    ? [...products].filter(p => p.approved).sort(() => Math.random() - 0.5).slice(0, 6)
+    : [];
 
   // Carousel slides data
   const slides = [
@@ -279,12 +281,44 @@ export default function HomePage() {
   // Sale categories
   const saleCategories = ['Fashion', 'Home Essentials', 'Jewelry & Fashion Accessories'];
   
-  // Get sale products for current category
+  // Get sale products for current category - Fixed filtering logic
   const getSaleProducts = (category) => {
-    const categoryProducts = products.filter(product => 
-      product.category?.toLowerCase().includes(category.toLowerCase()) ||
-      product.category === category
-    );
+    if (products.length === 0) return [];
+    
+    const categoryProducts = products.filter(product => {
+      if (!product.approved) return false;
+      
+      // More flexible category matching
+      const productCategory = product.category?.toLowerCase() || '';
+      const targetCategory = category.toLowerCase();
+      
+      // Direct match or partial match
+      if (productCategory.includes(targetCategory)) return true;
+      
+      // Special case for jewelry
+      if (category === 'Jewelry & Fashion Accessories' && 
+          (productCategory.includes('jewelry') || productCategory.includes('accessory'))) {
+        return true;
+      }
+      
+      // Special case for home essentials
+      if (category === 'Home Essentials' && 
+          (productCategory.includes('home') || productCategory.includes('furniture') || 
+           productCategory.includes('kitchen') || productCategory.includes('decor'))) {
+        return true;
+      }
+      
+      // Special case for fashion
+      if (category === 'Fashion' && 
+          (productCategory.includes('fashion') || productCategory.includes('clothing') || 
+           productCategory.includes('apparel') || productCategory.includes('shirt') ||
+           productCategory.includes('dress') || productCategory.includes('pants'))) {
+        return true;
+      }
+      
+      return false;
+    });
+    
     return categoryProducts.slice(0, 8); // Show 8 products in sale row
   };
 
@@ -297,6 +331,23 @@ export default function HomePage() {
     const discounts = [10, 15, 20, 25, 30, 35, 40, 50];
     return discounts[Math.floor(Math.random() * discounts.length)];
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto"></div>
+          <p className="mt-4 text-lg text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Debug info (remove in production)
+  console.log('Total products:', products.length);
+  console.log('Approved products:', products.filter(p => p.approved).length);
+  console.log('Current sale products:', currentSaleProducts.length);
 
   return (
     <div>
@@ -403,47 +454,53 @@ export default function HomePage() {
 
         {/* Products Carousel */}
         <div className="relative">
-          <div className="overflow-hidden">
-            <div 
-              className="flex transition-transform duration-300 ease-in-out"
-              style={{ transform: `translateX(-${currentSaleIndex * (100 / productsPerView)}%)` }}
-            >
-              {currentSaleProducts.map((product) => {
-                const discount = getRandomDiscount();
-                const originalPrice = product.price;
-                const salePrice = (originalPrice * (1 - discount / 100)).toFixed(2);
-                
-                return (
-                  <div key={product.id} className="flex-shrink-0 w-1/4 px-2">
-                    <Link
-                      to={`/products/${product.id}`}
-                      className="block bg-white border-2 border-red-200 rounded-lg shadow hover:shadow-lg transition-shadow"
-                    >
-                      <div className="relative">
-                        <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-md text-sm font-bold z-10">
-                          -{discount}%
+          {currentSaleProducts.length > 0 ? (
+            <div className="overflow-hidden">
+              <div 
+                className="flex transition-transform duration-300 ease-in-out"
+                style={{ transform: `translateX(-${currentSaleIndex * (100 / productsPerView)}%)` }}
+              >
+                {currentSaleProducts.map((product) => {
+                  const discount = getRandomDiscount();
+                  const originalPrice = product.price;
+                  const salePrice = (originalPrice * (1 - discount / 100)).toFixed(2);
+                  
+                  return (
+                    <div key={product.id} className="flex-shrink-0 w-1/4 px-2">
+                      <Link
+                        to={`/products/${product.id}`}
+                        className="block bg-white border-2 border-red-200 rounded-lg shadow hover:shadow-lg transition-shadow"
+                      >
+                        <div className="relative">
+                          <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-md text-sm font-bold z-10">
+                            -{discount}%
+                          </div>
+                          <div className="bg-white p-4 flex items-center justify-center rounded-t-lg h-[200px]">
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="object-contain max-h-full max-w-full"
+                            />
+                          </div>
                         </div>
-                        <div className="bg-white p-4 flex items-center justify-center rounded-t-lg h-[200px]">
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="object-contain max-h-full max-w-full"
-                          />
+                        <div className="p-4">
+                          <h3 className="text-lg font-bold text-gray-800 truncate">{product.name}</h3>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-red-600 font-bold text-lg">${salePrice}</span>
+                            <span className="text-gray-500 line-through text-sm">${originalPrice}</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="p-4">
-                        <h3 className="text-lg font-bold text-gray-800 truncate">{product.name}</h3>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-red-600 font-bold text-lg">${salePrice}</span>
-                          <span className="text-gray-500 line-through text-sm">${originalPrice}</span>
-                        </div>
-                      </div>
-                    </Link>
-                  </div>
-                );
-              })}
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No products available in {saleCategory} category</p>
+            </div>
+          )}
 
           {/* Navigation Arrows */}
           {currentSaleIndex > 0 && (
@@ -509,26 +566,33 @@ export default function HomePage() {
       {/* Featured Products Section */}
       <section className="py-12 px-6 max-w-7xl mx-auto">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">Featured Products</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {featuredProducts.map((product) => (
-            <Link
-              to={`/products/${product.id}`}
-              key={product.id}
-              className="bg-white p-4 border rounded-lg shadow hover:shadow-md transition"
-            >
-              <div className="bg-white border p-2 flex items-center justify-center rounded-md h-[200px]">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="object-contain max-h-full max-w-full"
-                  style={{ imageRendering: "auto" }}
-                />
-              </div>
-              <h3 className="mt-4 text-lg font-bold text-gray-800">{product.name}</h3>
-              <p className="text-gray-600">${product.price}</p>
-            </Link>
-          ))}
-        </div>
+        
+        {featuredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {featuredProducts.map((product) => (
+              <Link
+                to={`/products/${product.id}`}
+                key={product.id}
+                className="bg-white p-4 border rounded-lg shadow hover:shadow-md transition"
+              >
+                <div className="bg-white border p-2 flex items-center justify-center rounded-md h-[200px]">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="object-contain max-h-full max-w-full"
+                    style={{ imageRendering: "auto" }}
+                  />
+                </div>
+                <h3 className="mt-4 text-lg font-bold text-gray-800">{product.name}</h3>
+                <p className="text-gray-600">${product.price}</p>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No featured products available</p>
+          </div>
+        )}
 
         <div className="mt-8 text-center">
           <Link to="/products">

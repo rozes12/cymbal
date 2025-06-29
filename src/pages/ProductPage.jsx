@@ -611,7 +611,7 @@ const categoryAliasMap = {
   // Add more aliases as needed
 };
 
-export default function ProductsPage() {
+export default function ProductPage() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const rawCategory = params.get("category")?.toLowerCase().trim() || "";
@@ -619,6 +619,7 @@ export default function ProductsPage() {
   const searchQuery = params.get("search") || "";
 
   const allProducts = useProductStore((state) => state.products);
+  const loading = useProductStore((state) => state.loading);
   const [visibleCount, setVisibleCount] = useState(10);
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -635,25 +636,73 @@ export default function ProductsPage() {
     return () => clearInterval(timer);
   }, [activeSaleCategory]);
 
+  // Enhanced category matching function
+  const matchesCategory = (product, targetCategory) => {
+    if (!product.category) return false;
+    
+    const productCategory = product.category.toLowerCase().trim();
+    const target = targetCategory.toLowerCase();
+    
+    // Direct match
+    if (productCategory.includes(target)) return true;
+    
+    // Check if product category is in the highLevelCategoryMap for this target
+    if (highLevelCategoryMap[targetCategory]) {
+      const validCategories = highLevelCategoryMap[targetCategory].map(c => c.toLowerCase().trim());
+      return validCategories.some(valid => productCategory.includes(valid));
+    }
+    
+    // Fallback fuzzy matching
+    if (targetCategory === 'Fashion') {
+      return productCategory.includes('fashion') || 
+             productCategory.includes('clothing') || 
+             productCategory.includes('apparel') || 
+             productCategory.includes('shirt') ||
+             productCategory.includes('dress') || 
+             productCategory.includes('pants') ||
+             productCategory.includes('wear');
+    }
+    
+    if (targetCategory === 'Home Essentials') {
+      return productCategory.includes('home') || 
+             productCategory.includes('furniture') || 
+             productCategory.includes('kitchen') || 
+             productCategory.includes('decor') ||
+             productCategory.includes('household');
+    }
+    
+    if (targetCategory === 'Jewelry & Fashion Accessories') {
+      return productCategory.includes('jewelry') || 
+             productCategory.includes('jewellery') || 
+             productCategory.includes('accessory') ||
+             productCategory.includes('accessories') ||
+             productCategory.includes('watch') ||
+             productCategory.includes('ring') ||
+             productCategory.includes('necklace');
+    }
+    
+    return false;
+  };
+
   // Filter products based on search and category
   useEffect(() => {
+    if (!allProducts || allProducts.length === 0) {
+      setFilteredProducts([]);
+      return;
+    }
+
     let products = allProducts.filter(p => p.approved);
 
     if (searchQuery) {
       products = products.filter(product =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category?.toLowerCase().includes(searchQuery.toLowerCase())
+        product.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
-    } else if (selectedCategory && highLevelCategoryMap[selectedCategory]) {
-      const validCategories = highLevelCategoryMap[selectedCategory].map(c =>
-        c.toLowerCase().trim()
-      );
-      products = products.filter(p => {
-        const fullCategory = p.category?.toLowerCase().trim();
-        return fullCategory && validCategories.some(valid => fullCategory.includes(valid));
-      });
-      // Shuffle and take 20 random products
-      products = products.sort(() => Math.random() - 0.5).slice(0, 20);
+    } else if (selectedCategory) {
+      products = products.filter(p => matchesCategory(p, selectedCategory));
+      // Shuffle and limit for category view
+      products = products.sort(() => Math.random() - 0.5).slice(0, 50);
     }
 
     setFilteredProducts(products);
@@ -668,19 +717,15 @@ export default function ProductsPage() {
 
   // Get products for specific category
   const getProductsByCategory = (category, limit = 20) => {
-    if (!highLevelCategoryMap[category]) return [];
+    if (!allProducts || allProducts.length === 0) return [];
     
-    const validCategories = highLevelCategoryMap[category].map(c => c.toLowerCase().trim());
-    const products = allProducts.filter(p => {
-      const fullCategory = p.category?.toLowerCase().trim();
-      return fullCategory && validCategories.some(valid => fullCategory.includes(valid));
-    });
-    
+    const products = allProducts.filter(p => p.approved && matchesCategory(p, category));
     return products.sort(() => Math.random() - 0.5).slice(0, limit);
   };
 
   // Get top 10 products (highest rated or random selection)
   const getTop10Products = () => {
+    if (!allProducts || allProducts.length === 0) return [];
     return [...allProducts]
       .filter(p => p.approved)
       .sort(() => Math.random() - 0.5)
@@ -689,6 +734,7 @@ export default function ProductsPage() {
 
   // Get new arrivals (most recent products)
   const getNewArrivals = () => {
+    if (!allProducts || allProducts.length === 0) return [];
     return [...allProducts]
       .filter(p => p.approved)
       .sort(() => Math.random() - 0.5)
@@ -704,6 +750,18 @@ export default function ProductsPage() {
       discount: Math.floor(Math.random() * 40) + 20 // 20-60% off
     }));
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-lg text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
 
   const saleProducts = getSaleProducts();
   const visibleSaleProducts = saleProducts.slice(saleScrollIndex % saleProducts.length, (saleScrollIndex % saleProducts.length) + 4);
@@ -729,6 +787,9 @@ export default function ProductsPage() {
           src={product.image}
           alt={product.name}
           className="object-contain max-w-full max-h-full"
+          onError={(e) => {
+            e.target.src = 'https://via.placeholder.com/200x200?text=No+Image';
+          }}
         />
       </div>
       <div className="p-3">
@@ -753,24 +814,37 @@ export default function ProductsPage() {
   const CategoryRow = ({ title, products, showNumbers = false }) => (
     <section className="mb-8">
       <h2 className="text-2xl font-bold mb-4 text-gray-800">{title}</h2>
-      <div className="flex gap-4 overflow-x-auto pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        {products.map((product, index) => (
-          <div key={product.id} className="relative">
-            {showNumbers && (
-              <div className="absolute -top-2 -left-2 z-10 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
-                {index + 1}
-              </div>
-            )}
-            <ProductCard product={product} />
-          </div>
-        ))}
-      </div>
+      {products.length > 0 ? (
+        <div className="flex gap-4 overflow-x-auto pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {products.map((product, index) => (
+            <div key={product.id} className="relative">
+              {showNumbers && (
+                <div className="absolute -top-2 -left-2 z-10 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                  {index + 1}
+                </div>
+              )}
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No products available in this category</p>
+        </div>
+      )}
     </section>
   );
 
   // Only show visibleCount products for the main filtered results
   const visibleProducts = filteredProducts.slice(0, visibleCount);
   const hasMore = visibleCount < filteredProducts.length;
+
+  // Debug info (remove in production)
+  console.log('Products loaded:', allProducts.length);
+  console.log('Approved products:', allProducts.filter(p => p.approved).length);
+  console.log('Selected category:', selectedCategory);
+  console.log('Search query:', searchQuery);
+  console.log('Filtered products:', filteredProducts.length);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -834,25 +908,35 @@ export default function ProductsPage() {
 
               {/* Sale Products with Auto-scroll */}
               <div className="relative">
-                <div className="flex gap-4 overflow-hidden">
-                  {visibleSaleProducts.map(product => (
-                    <ProductCard key={`${product.id}-${saleScrollIndex}`} product={product} showSale={true} />
-                  ))}
-                </div>
+                {visibleSaleProducts.length > 0 ? (
+                  <div className="flex gap-4 overflow-hidden">
+                    {visibleSaleProducts.map(product => (
+                      <ProductCard key={`${product.id}-${saleScrollIndex}`} product={product} showSale={true} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No products available for sale in {activeSaleCategory}</p>
+                  </div>
+                )}
                 
                 {/* Manual scroll buttons */}
-                <button
-                  onClick={() => scrollSale('left')}
-                  className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
-                >
-                  ←
-                </button>
-                <button
-                  onClick={() => scrollSale('right')}
-                  className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
-                >
-                  →
-                </button>
+                {saleProducts.length > 4 && (
+                  <>
+                    <button
+                      onClick={() => scrollSale('left')}
+                      className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                    >
+                      ←
+                    </button>
+                    <button
+                      onClick={() => scrollSale('right')}
+                      className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                    >
+                      →
+                    </button>
+                  </>
+                )}
               </div>
             </section>
 
@@ -863,10 +947,21 @@ export default function ProductsPage() {
             {Object.keys(highLevelCategoryMap).map(category => {
               if (saleCategories.includes(category)) return null;
               const products = getProductsByCategory(category, 10);
-              if (products.length === 0) return null;
               
               return (
-                <CategoryRow key={category} title={category} products={products} />
+                <div key={category}>
+                  <CategoryRow title={category} products={products} />
+                  {products.length > 0 && (
+                    <div className="text-right mb-4">
+                      <Link
+                        to={`/products?category=${encodeURIComponent(category)}`}
+                        className="text-indigo-600 hover:text-indigo-700 font-medium"
+                      >
+                        View All {category} →
+                      </Link>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </>
@@ -875,42 +970,63 @@ export default function ProductsPage() {
         {/* Main Product Grid (for search results or specific category) */}
         {(searchQuery || selectedCategory) && (
           <div className="mb-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {visibleProducts.length > 0 ? (
-                visibleProducts.map((product) => (
-                  <Link
-                    to={`/products/${product.id}`}
-                    key={product.id}
-                    className="border p-4 rounded-xl shadow hover:shadow-lg transition-shadow bg-white"
-                  >
-                    <div className="aspect-[4/3] w-full bg-white border rounded overflow-hidden flex items-center justify-center">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="object-contain max-w-full max-h-full"
-                      />
-                    </div>
-                    <h2 className="text-xl font-bold mt-3">{product.name}</h2>
-                    <p className="text-gray-600">${product.price}</p>
-                  </Link>
-                ))
-              ) : (
-                <p className="text-gray-600 text-lg col-span-full text-center py-12">
+            {filteredProducts.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {visibleProducts.map((product) => (
+                    <Link
+                      to={`/products/${product.id}`}
+                      key={product.id}
+                      className="border p-4 rounded-xl shadow hover:shadow-lg transition-shadow bg-white"
+                    >
+                      <div className="aspect-[4/3] w-full bg-white border rounded overflow-hidden flex items-center justify-center">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="object-contain max-w-full max-h-full"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/200x200?text=No+Image';
+                          }}
+                        />
+                      </div>
+                      <h2 className="text-xl font-bold mt-3">{product.name}</h2>
+                      <p className="text-gray-600">${product.price}</p>
+                      <p className="text-sm text-gray-500 mt-1">{product.category}</p>
+                    </Link>
+                  ))}
+                </div>
+
+                {hasMore && (
+                  <div className="mt-8 flex justify-center">
+                    <button
+                      onClick={() => setVisibleCount((prev) => prev + 10)}
+                      className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                    >
+                      Load More Products
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-600 text-lg">
                   No products found {searchQuery ? `for "${searchQuery}"` : 'in this category'}.
                 </p>
-              )}
-            </div>
-
-            {hasMore && (
-              <div className="mt-8 flex justify-center">
-                <button
-                  onClick={() => setVisibleCount((prev) => prev + 10)}
-                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                <Link 
+                  to="/products" 
+                  className="mt-4 inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
                 >
-                  Load More Products
-                </button>
+                  Browse All Products
+                </Link>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Show message if no products at all */}
+        {!loading && allProducts.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-600 text-lg">No products available. Please check back later.</p>
           </div>
         )}
       </div>
