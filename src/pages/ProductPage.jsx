@@ -598,6 +598,7 @@
 //     </div>
 //   );
 // }
+
 import React, { useState, useEffect } from "react";
 import { useProductStore } from "@/stores/productStore";
 import { Link, useLocation } from "react-router-dom";
@@ -692,7 +693,7 @@ export default function ProductPage() {
 
   // Filter products based on search and category
   const getFilteredProducts = () => {
-    let filtered = allProducts.filter((p) => p.approved !== false); // Show all products unless explicitly not approved
+    let filtered = allProducts; // Show all products for now
 
     // Apply search filter
     if (searchQuery.trim()) {
@@ -717,7 +718,7 @@ export default function ProductPage() {
     if (!categoryMap || !categoryMap[categoryName]) return [];
     
     const categoryProducts = allProducts
-      .filter((p) => p.approved !== false)
+      .filter((p) => p) // Show all products
       .filter((p) => matchesCategory(p, categoryName))
       .sort(() => Math.random() - 0.5)
       .slice(0, limit);
@@ -728,7 +729,7 @@ export default function ProductPage() {
   // Get top 10 products (random selection)
   const getTop10Products = () => {
     return allProducts
-      .filter((p) => p.approved !== false)
+      .filter((p) => p) // Show all products
       .sort(() => Math.random() - 0.5)
       .slice(0, 10);
   };
@@ -820,7 +821,7 @@ export default function ProductPage() {
 
   const filteredProducts = getFilteredProducts();
   const top10Products = getTop10Products();
-  const newArrivals = allProducts.filter(p => p.approved !== false).sort(() => Math.random() - 0.5).slice(0, 10);
+  const newArrivals = allProducts.filter(p => p).sort(() => Math.random() - 0.5).slice(0, 10);
 
   // Debug info
   console.log('Products loaded:', allProducts.length);

@@ -224,7 +224,7 @@
 //     </div>
 //   );
 // }
-// HomePage.jsx
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useProductStore } from "@/stores/productStore";
@@ -236,9 +236,9 @@ export default function HomePage() {
   const [saleCategory, setSaleCategory] = useState('Fashion');
   const [currentSaleIndex, setCurrentSaleIndex] = useState(0);
 
-  // Only process products if they're loaded and not empty
+  // Only process products if they're loaded and not empty - Show ALL products regardless of approval
   const featuredProducts = products.length > 0 
-    ? [...products].filter(p => p.approved).sort(() => Math.random() - 0.5).slice(0, 6)
+    ? [...products].sort(() => Math.random() - 0.5).slice(0, 6)
     : [];
 
   // Carousel slides data
@@ -281,43 +281,52 @@ export default function HomePage() {
   // Sale categories
   const saleCategories = ['Fashion', 'Home Essentials', 'Jewelry & Fashion Accessories'];
   
-  // Get sale products for current category - Fixed filtering logic
+  // Enhanced category matching
+  const matchesCategory = (product, category) => {
+    if (!product.category) return false;
+    
+    const productCategory = product.category.toLowerCase();
+    const targetCategory = category.toLowerCase();
+    
+    // Direct match or partial match
+    if (productCategory.includes(targetCategory)) return true;
+    
+    // Special case for jewelry
+    if (category === 'Jewelry & Fashion Accessories' && 
+        (productCategory.includes('jewelry') || productCategory.includes('accessory') || 
+         productCategory.includes('beauty') || productCategory.includes('makeup'))) {
+      return true;
+    }
+    
+    // Special case for home essentials
+    if (category === 'Home Essentials' && 
+        (productCategory.includes('home') || productCategory.includes('furniture') || 
+         productCategory.includes('kitchen') || productCategory.includes('decor') || 
+         productCategory.includes('household') || productCategory.includes('laptop'))) {
+      return true;
+    }
+    
+    // Special case for fashion
+    if (category === 'Fashion' && 
+        (productCategory.includes('fashion') || productCategory.includes('clothing') || 
+         productCategory.includes('apparel') || productCategory.includes('shirt') ||
+         productCategory.includes('dress') || productCategory.includes('pants') || 
+         productCategory.includes('bag'))) {
+      return true;
+    }
+    
+    return false;
+  };
+  
+  // Get sale products for current category - Show ALL products
   const getSaleProducts = (category) => {
     if (products.length === 0) return [];
     
     const categoryProducts = products.filter(product => {
-      if (!product.approved) return false;
-      
-      // More flexible category matching
-      const productCategory = product.category?.toLowerCase() || '';
-      const targetCategory = category.toLowerCase();
-      
-      // Direct match or partial match
-      if (productCategory.includes(targetCategory)) return true;
-      
-      // Special case for jewelry
-      if (category === 'Jewelry & Fashion Accessories' && 
-          (productCategory.includes('jewelry') || productCategory.includes('accessory'))) {
-        return true;
-      }
-      
-      // Special case for home essentials
-      if (category === 'Home Essentials' && 
-          (productCategory.includes('home') || productCategory.includes('furniture') || 
-           productCategory.includes('kitchen') || productCategory.includes('decor'))) {
-        return true;
-      }
-      
-      // Special case for fashion
-      if (category === 'Fashion' && 
-          (productCategory.includes('fashion') || productCategory.includes('clothing') || 
-           productCategory.includes('apparel') || productCategory.includes('shirt') ||
-           productCategory.includes('dress') || productCategory.includes('pants'))) {
-        return true;
-      }
-      
-      return false;
+      return matchesCategory(product, category);
     });
+    
+    console.log(`Sale products for ${category}:`, categoryProducts.length);
     
     return categoryProducts.slice(0, 8); // Show 8 products in sale row
   };
@@ -344,9 +353,9 @@ export default function HomePage() {
     );
   }
 
-  // Debug info (remove in production)
+  // Debug info
   console.log('Total products:', products.length);
-  console.log('Approved products:', products.filter(p => p.approved).length);
+  console.log('Featured products:', featuredProducts.length);
   console.log('Current sale products:', currentSaleProducts.length);
 
   return (
@@ -480,6 +489,9 @@ export default function HomePage() {
                               src={product.image}
                               alt={product.name}
                               className="object-contain max-h-full max-w-full"
+                              onError={(e) => {
+                                e.target.src = 'https://via.placeholder.com/200x200?text=No+Image';
+                              }}
                             />
                           </div>
                         </div>
@@ -499,6 +511,7 @@ export default function HomePage() {
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-500">No products available in {saleCategory} category</p>
+              <p className="text-sm text-gray-400 mt-2">Total products in system: {products.length}</p>
             </div>
           )}
 
@@ -581,6 +594,9 @@ export default function HomePage() {
                     alt={product.name}
                     className="object-contain max-h-full max-w-full"
                     style={{ imageRendering: "auto" }}
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/200x200?text=No+Image';
+                    }}
                   />
                 </div>
                 <h3 className="mt-4 text-lg font-bold text-gray-800">{product.name}</h3>
@@ -591,6 +607,7 @@ export default function HomePage() {
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-500">No featured products available</p>
+            <p className="text-sm text-gray-400 mt-2">Total products in system: {products.length}</p>
           </div>
         )}
 
