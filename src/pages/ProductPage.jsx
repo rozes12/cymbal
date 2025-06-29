@@ -599,6 +599,456 @@
 //   );
 // }
 
+// products show, search doesn't work
+// import React, { useState, useEffect } from "react";
+// import { useProductStore } from "@/stores/productStore";
+// import { Link, useLocation } from "react-router-dom";
+
+// // Fallback category map - this will be used if GCS fetch fails
+// const fallbackCategoryMap = {
+//   "Fashion": ["clothing", "apparel", "fashion", "shirt", "dress", "pants", "wear", "tops", "bottoms"],
+//   "Home Essentials": ["home", "furniture", "kitchen", "decor", "household", "living", "bedroom", "dining"],
+//   "Jewelry & Fashion Accessories": ["jewelry", "jewellery", "accessory", "accessories", "watch", "ring", "necklace", "bracelet", "earrings"]
+// };
+
+// const categoryAliasMap = {
+//   jewelry: "Jewelry & Fashion Accessories",
+//   jewellery: "Jewelry & Fashion Accessories", 
+//   fashion: "Fashion",
+//   // Add more aliases as needed
+// };
+
+// export default function ProductPage() {
+//   const location = useLocation();
+//   const params = new URLSearchParams(location.search);
+//   const rawCategory = params.get("category")?.toLowerCase().trim() || "";
+//   const selectedCategory = categoryAliasMap[rawCategory] || params.get("category");
+//   const searchParam = params.get("search") || "";
+
+//   const allProducts = useProductStore((state) => state.products);
+//   const loading = useProductStore((state) => state.loading);
+//   const [searchQuery, setSearchQuery] = useState(searchParam);
+//   const [activeTab, setActiveTab] = useState(0);
+//   const [saleOffset, setSaleOffset] = useState(0);
+//   const [categoryMap, setCategoryMap] = useState(fallbackCategoryMap);
+//   const [categoryMapLoading, setCategoryMapLoading] = useState(true);
+
+//   // Fetch category map from GCS
+//   useEffect(() => {
+//     const fetchCategoryMap = async () => {
+//       try {
+//         const response = await fetch("https://storage.googleapis.com/cymre/data/highLevelCategoryMap.json");
+//         if (response.ok) {
+//           const data = await response.json();
+//           setCategoryMap(data);
+//         } else {
+//           console.warn("Failed to fetch category map, using fallback");
+//         }
+//       } catch (error) {
+//         console.warn("Error fetching category map, using fallback:", error);
+//       } finally {
+//         setCategoryMapLoading(false);
+//       }
+//     };
+
+//     fetchCategoryMap();
+//   }, []);
+
+//   // Auto-swipe for sale section
+//   useEffect(() => {
+//     const interval = setInterval(() => {
+//       setSaleOffset(prev => prev + 4);
+//     }, 3000);
+
+//     return () => clearInterval(interval);
+//   }, []);
+
+//   // Update search query when URL changes
+//   useEffect(() => {
+//     setSearchQuery(searchParam);
+//   }, [searchParam]);
+
+//   // Reset sale offset when tab changes
+//   useEffect(() => {
+//     setSaleOffset(0);
+//   }, [activeTab]);
+
+//   // Enhanced category matching function
+//   const matchesCategory = (product, targetCategory) => {
+//     if (!product.category) return false;
+    
+//     const productCategory = product.category.toLowerCase().trim();
+//     const target = targetCategory.toLowerCase();
+    
+//     // Direct match
+//     if (productCategory.includes(target)) return true;
+    
+//     // Check if product category is in the categoryMap for this target
+//     if (categoryMap[targetCategory]) {
+//       const validCategories = categoryMap[targetCategory].map(c => c.toLowerCase().trim());
+//       return validCategories.some(valid => productCategory.includes(valid));
+//     }
+    
+//     return false;
+//   };
+
+//   // Filter products based on search and category
+//   const getFilteredProducts = () => {
+//     let filtered = allProducts; // Show all products for now
+
+//     // Apply search filter
+//     if (searchQuery.trim()) {
+//       const query = searchQuery.toLowerCase();
+//       filtered = filtered.filter((product) =>
+//         product.name.toLowerCase().includes(query) ||
+//         product.category?.toLowerCase().includes(query) ||
+//         product.description?.toLowerCase().includes(query)
+//       );
+//     }
+
+//     // Apply category filter
+//     if (selectedCategory) {
+//       filtered = filtered.filter(p => matchesCategory(p, selectedCategory));
+//     }
+
+//     return filtered;
+//   };
+
+//   // Get products by category for sections
+//   const getProductsByCategory = (categoryName, limit = 10) => {
+//     if (!categoryMap || !categoryMap[categoryName]) return [];
+    
+//     const categoryProducts = allProducts
+//       .filter((p) => p) // Show all products
+//       .filter((p) => matchesCategory(p, categoryName))
+//       .sort(() => Math.random() - 0.5)
+//       .slice(0, limit);
+    
+//     return categoryProducts;
+//   };
+
+//   // Get top 10 products (random selection)
+//   const getTop10Products = () => {
+//     return allProducts
+//       .filter((p) => p) // Show all products
+//       .sort(() => Math.random() - 0.5)
+//       .slice(0, 10);
+//   };
+
+//   // Handle search
+//   const handleSearch = (e) => {
+//     e.preventDefault();
+//     if (searchQuery.trim()) {
+//       window.location.href = `/products?search=${encodeURIComponent(searchQuery)}`;
+//     }
+//   };
+
+//   // Sale categories for rotating display
+//   const saleCategories = ["Fashion", "Home Essentials", "Jewelry & Fashion Accessories"];
+//   const currentSaleCategory = saleCategories[activeTab];
+//   const allSaleProducts = getProductsByCategory(currentSaleCategory, 20);
+  
+//   // Get visible sale products based on offset
+//   const visibleSaleProducts = allSaleProducts.slice(saleOffset % Math.max(1, allSaleProducts.length - 3), 
+//     (saleOffset % Math.max(1, allSaleProducts.length - 3)) + 6);
+
+//   // Add random discounts for sale items
+//   const addSalePrice = (product) => ({
+//     ...product,
+//     originalPrice: product.price,
+//     discount: Math.floor(Math.random() * 50) + 10, // 10-60% off
+//     salePrice: (product.price * (1 - (Math.floor(Math.random() * 50) + 10) / 100)).toFixed(2)
+//   });
+
+//   const ProductCard = ({ product, showSale = false }) => {
+//     const saleProduct = showSale ? addSalePrice(product) : product;
+    
+//     return (
+//       <Link
+//         to={`/products/${product.id}`}
+//         className="flex-shrink-0 w-48 bg-white border rounded-lg shadow hover:shadow-md transition-shadow"
+//       >
+//         <div className="aspect-square w-full bg-gray-50 rounded-t-lg overflow-hidden flex items-center justify-center p-2">
+//           <img
+//             src={product.image}
+//             alt={product.name}
+//             className="object-contain max-w-full max-h-full"
+//             onError={(e) => {
+//               e.target.src = 'https://via.placeholder.com/200x200?text=No+Image';
+//             }}
+//           />
+//         </div>
+//         <div className="p-3">
+//           <h3 className="font-semibold text-sm text-gray-800 line-clamp-2 mb-2">
+//             {product.name}
+//           </h3>
+//           <div className="flex items-center gap-2">
+//             {showSale ? (
+//               <>
+//                 <span className="text-lg font-bold text-red-600">${saleProduct.salePrice}</span>
+//                 <span className="text-sm text-gray-500 line-through">${product.price}</span>
+//                 <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
+//                   {saleProduct.discount}% OFF
+//                 </span>
+//               </>
+//             ) : (
+//               <span className="text-lg font-bold text-gray-800">${product.price}</span>
+//             )}
+//           </div>
+//         </div>
+//       </Link>
+//     );
+//   };
+
+//   const HorizontalProductRow = ({ products, showSale = false }) => (
+//     <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+//       {products.map((product) => (
+//         <ProductCard key={product.id} product={product} showSale={showSale} />
+//       ))}
+//     </div>
+//   );
+
+//   // Show loading state
+//   if (loading || categoryMapLoading) {
+//     return (
+//       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
+//           <p className="mt-4 text-lg text-gray-600">Loading products...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   const filteredProducts = getFilteredProducts();
+//   const top10Products = getTop10Products();
+//   const newArrivals = allProducts.filter(p => p).sort(() => Math.random() - 0.5).slice(0, 10);
+
+//   // Debug info
+//   console.log('Products loaded:', allProducts.length);
+//   console.log('Approved products:', allProducts.filter(p => p.approved !== false).length);
+//   console.log('Selected category:', selectedCategory);
+//   console.log('Search query:', searchQuery);
+//   console.log('Filtered products:', filteredProducts.length);
+
+//   // If there's a search query or selected category, show filtered results
+//   if (searchQuery.trim() || selectedCategory) {
+//     return (
+//       <div className="min-h-screen bg-gray-50">
+//         {/* Search Bar */}
+//         <div className="bg-white shadow-sm border-b">
+//           <div className="max-w-7xl mx-auto px-6 py-4">
+//             <form onSubmit={handleSearch} className="flex gap-4 items-center">
+//               <div className="flex-1">
+//                 <input
+//                   type="text"
+//                   value={searchQuery}
+//                   onChange={(e) => setSearchQuery(e.target.value)}
+//                   placeholder="Search products..."
+//                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+//                 />
+//               </div>
+//               <button
+//                 type="submit"
+//                 className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition"
+//               >
+//                 Search
+//               </button>
+//             </form>
+//           </div>
+//         </div>
+
+//         {/* Results */}
+//         <div className="max-w-7xl mx-auto px-6 py-8">
+//           <h1 className="text-2xl font-bold mb-6">
+//             {searchQuery ? `Search results for "${searchQuery}"` : 
+//              selectedCategory ? `${selectedCategory} Products` : 'All Products'}
+//           </h1>
+          
+//           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+//             {filteredProducts.length > 0 ? (
+//               filteredProducts.map((product) => (
+//                 <Link
+//                   to={`/products/${product.id}`}
+//                   key={product.id}
+//                   className="bg-white border rounded-lg shadow hover:shadow-md transition-shadow"
+//                 >
+//                   <div className="aspect-square w-full bg-gray-50 rounded-t-lg overflow-hidden flex items-center justify-center p-4">
+//                     <img
+//                       src={product.image}
+//                       alt={product.name}
+//                       className="object-contain max-w-full max-h-full"
+//                       onError={(e) => {
+//                         e.target.src = 'https://via.placeholder.com/200x200?text=No+Image';
+//                       }}
+//                     />
+//                   </div>
+//                   <div className="p-4">
+//                     <h2 className="font-semibold text-gray-800 line-clamp-2 mb-2">{product.name}</h2>
+//                     <p className="text-lg font-bold text-gray-900">${product.price}</p>
+//                   </div>
+//                 </Link>
+//               ))
+//             ) : (
+//               <p className="text-gray-600 text-lg col-span-full text-center">
+//                 No products found matching your criteria.
+//               </p>
+//             )}
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   // Default view with sections
+//   return (
+//     <div className="min-h-screen bg-gray-50">
+//       {/* Search Bar */}
+//       <div className="bg-white shadow-sm border-b">
+//         <div className="max-w-7xl mx-auto px-6 py-4">
+//           <form onSubmit={handleSearch} className="flex gap-4 items-center justify-end">
+//             <div className="w-96">
+//               <input
+//                 type="text"
+//                 value={searchQuery}
+//                 onChange={(e) => setSearchQuery(e.target.value)}
+//                 placeholder="Search products..."
+//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+//               />
+//             </div>
+//             <button
+//               type="submit"
+//               className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition"
+//             >
+//               Search
+//             </button>
+//           </form>
+//         </div>
+//       </div>
+
+//       <div className="max-w-7xl mx-auto px-6 py-8">
+//         {/* Top 10 Products */}
+//         <section className="mb-12">
+//           <h2 className="text-2xl font-bold mb-6 text-gray-800">Top 10 Products Today</h2>
+//           <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-4">
+//             {top10Products.map((product, index) => (
+//               <Link
+//                 to={`/products/${product.id}`}
+//                 key={product.id}
+//                 className="relative bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden"
+//               >
+//                 <div className="absolute top-2 left-2 bg-black text-white text-lg font-bold w-8 h-8 rounded-full flex items-center justify-center z-10">
+//                   {index + 1}
+//                 </div>
+//                 <div className="aspect-square w-full bg-gray-50 flex items-center justify-center p-2">
+//                   <img
+//                     src={product.image}
+//                     alt={product.name}
+//                     className="object-contain max-w-full max-h-full"
+//                     onError={(e) => {
+//                       e.target.src = 'https://via.placeholder.com/200x200?text=No+Image';
+//                     }}
+//                   />
+//                 </div>
+//                 <div className="p-2">
+//                   <h3 className="text-xs font-medium text-gray-800 line-clamp-2">
+//                     {product.name}
+//                   </h3>
+//                   <p className="text-sm font-bold text-gray-900">${product.price}</p>
+//                 </div>
+//               </Link>
+//             ))}
+//           </div>
+//         </section>
+
+//         {/* Sale Section with Auto-Swipe */}
+//         <section className="mb-12" id="sale-section">
+//           <div className="flex items-center justify-between mb-6">
+//             <h2 className="text-3xl font-bold text-red-600">SALE</h2>
+//             <div className="flex gap-2">
+//               {saleCategories.map((category, index) => (
+//                 <button
+//                   key={category}
+//                   onClick={() => setActiveTab(index)}
+//                   className={`px-4 py-2 rounded-lg font-medium transition ${
+//                     activeTab === index
+//                       ? 'bg-red-600 text-white'
+//                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+//                   }`}
+//                 >
+//                   {category === "Jewelry & Fashion Accessories" ? "Jewelry" : category}
+//                 </button>
+//               ))}
+//             </div>
+//           </div>
+          
+//           {/* Auto-swiping container */}
+//           <div className="overflow-hidden">
+//             {allSaleProducts.length > 0 ? (
+//               <div 
+//                 className="flex gap-4 transition-transform duration-1000 ease-in-out"
+//                 style={{ transform: `translateX(-${(saleOffset % Math.max(1, allSaleProducts.length - 3)) * 208}px)` }}
+//               >
+//                 {allSaleProducts.map((product) => (
+//                   <ProductCard key={product.id} product={product} showSale={true} />
+//                 ))}
+//               </div>
+//             ) : (
+//               <div className="text-center py-8">
+//                 <p className="text-gray-500">No products available for sale in {currentSaleCategory}</p>
+//               </div>
+//             )}
+//           </div>
+//         </section>
+
+//         {/* New Arrivals */}
+//         <section className="mb-12" id="new-arrivals">
+//           <h2 className="text-2xl font-bold mb-6 text-gray-800">New Arrivals</h2>
+//           {newArrivals.length > 0 ? (
+//             <HorizontalProductRow products={newArrivals} />
+//           ) : (
+//             <div className="text-center py-8">
+//               <p className="text-gray-500">No new arrivals available</p>
+//             </div>
+//           )}
+//         </section>
+
+//         {/* Other Categories */}
+//         {categoryMap && Object.keys(categoryMap).map((categoryName) => {
+//           if (saleCategories.includes(categoryName)) return null; // Skip sale categories
+          
+//           const categoryProducts = getProductsByCategory(categoryName, 8);
+//           if (categoryProducts.length === 0) return null;
+
+//           return (
+//             <section key={categoryName} className="mb-12">
+//               <div className="flex items-center justify-between mb-6">
+//                 <h2 className="text-2xl font-bold text-gray-800">{categoryName}</h2>
+//                 <Link
+//                   to={`/products?category=${encodeURIComponent(categoryName)}`}
+//                   className="text-indigo-600 hover:text-indigo-700 font-medium"
+//                 >
+//                   View All
+//                 </Link>
+//               </div>
+//               <HorizontalProductRow products={categoryProducts} />
+//             </section>
+//           );
+//         })}
+
+//         {/* Show message if no products at all */}
+//         {allProducts.length === 0 && (
+//           <div className="text-center py-12">
+//             <p className="text-gray-600 text-lg">No products available. Please check back later.</p>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
 import React, { useState, useEffect } from "react";
 import { useProductStore } from "@/stores/productStore";
 import { Link, useLocation } from "react-router-dom";
@@ -631,6 +1081,7 @@ export default function ProductPage() {
   const [saleOffset, setSaleOffset] = useState(0);
   const [categoryMap, setCategoryMap] = useState(fallbackCategoryMap);
   const [categoryMapLoading, setCategoryMapLoading] = useState(true);
+  const [fixedTop10Products, setFixedTop10Products] = useState([]); // Fixed Top 10
 
   // Fetch category map from GCS
   useEffect(() => {
@@ -667,16 +1118,22 @@ export default function ProductPage() {
     setSearchQuery(searchParam);
   }, [searchParam]);
 
-  // Reset sale offset when tab changes
+  // Set fixed Top 10 products once when products are loaded
   useEffect(() => {
-    setSaleOffset(0);
-  }, [activeTab]);
+    if (allProducts.length > 0 && fixedTop10Products.length === 0) {
+      const shuffled = [...allProducts]
+        .filter((p) => p) // Show all products
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 10);
+      setFixedTop10Products(shuffled);
+    }
+  }, [allProducts, fixedTop10Products.length]);
 
   // Enhanced category matching function
   const matchesCategory = (product, targetCategory) => {
     if (!product.category) return false;
     
-    const productCategory = product.category.toLowerCase().trim();
+    const productCategory = String(product.category).toLowerCase().trim();
     const target = targetCategory.toLowerCase();
     
     // Direct match
@@ -684,7 +1141,7 @@ export default function ProductPage() {
     
     // Check if product category is in the categoryMap for this target
     if (categoryMap[targetCategory]) {
-      const validCategories = categoryMap[targetCategory].map(c => c.toLowerCase().trim());
+      const validCategories = categoryMap[targetCategory].map(c => String(c).toLowerCase().trim());
       return validCategories.some(valid => productCategory.includes(valid));
     }
     
@@ -698,11 +1155,13 @@ export default function ProductPage() {
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter((product) =>
-        product.name.toLowerCase().includes(query) ||
-        product.category?.toLowerCase().includes(query) ||
-        product.description?.toLowerCase().includes(query)
-      );
+      filtered = filtered.filter((product) => {
+        const name = product.name ? String(product.name).toLowerCase() : '';
+        const category = product.category ? String(product.category).toLowerCase() : '';
+        const description = product.description ? String(product.description).toLowerCase() : '';
+        
+        return name.includes(query) || category.includes(query) || description.includes(query);
+      });
     }
 
     // Apply category filter
@@ -726,12 +1185,14 @@ export default function ProductPage() {
     return categoryProducts;
   };
 
-  // Get top 10 products (random selection)
+  // Reset sale offset when tab changes
+  useEffect(() => {
+    setSaleOffset(0);
+  }, [activeTab]);
+
+  // Get top 10 products (fixed selection)
   const getTop10Products = () => {
-    return allProducts
-      .filter((p) => p) // Show all products
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 10);
+    return fixedTop10Products;
   };
 
   // Handle search
