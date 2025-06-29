@@ -365,20 +365,19 @@ import ProductDetailsPage from "@/pages/ProductDetailsPage";
 import CartPage from "@/pages/CartPage";
 import AccountPage from "@/pages/AccountPage";
 import AdminLoginPage from "@/pages/AdminLoginPage";
-import CategorySectionPage from "@/CategorySectionPage"; // Attribute Generation Page
+import CategorySectionPage from "@/CategorySectionPage";
 import UserProfilePage from "@/pages/UserProfilePage";
-import ImageEditorApp from './components/ImageEditor/ImageEditorApp'; // AI Image Editor
+import ImageEditorApp from './components/ImageEditor/ImageEditorApp';
 
 // NEW IMPORTS for Admin Dashboard Sub-Pages
-import AdminDashboardPage from "@/pages/AdminDashboardPage"; // This is now the dashboard layout
-import DashboardOverview from "@/pages/admin/DashboardOverview"; // The default overview
-import AIGenerationPage from "@/pages/admin/AIGenerationPage"; // Contains AI generation tools & approvals
+import AdminDashboardPage from "@/pages/AdminDashboardPage";
+import DashboardOverview from "@/pages/admin/DashboardOverview";
+import AIGenerationPage from "@/pages/admin/AIGenerationPage";
 import ProductManagementPage from "@/pages/admin/ProductManagementPage";
 import CategoryPage from "@/pages/admin/CategoryPage";
 import OrdersPage from "@/pages/admin/OrdersPage";
 import UsersPage from "@/pages/admin/UsersPage";
 import SettingsPage from "@/pages/admin/SettingsPage";
-
 
 import { useProductStore } from "@/stores/productStore";
 import { useUserAuthStore } from "@/stores/userAuthStore";
@@ -386,13 +385,26 @@ import { useAdminAuthStore } from "@/stores/adminAuthStore";
 
 export default function App() {
   const fetchProducts = useProductStore((state) => state.fetchProducts);
+  const products = useProductStore((state) => state.products);
+  const loading = useProductStore((state) => state.loading);
+  const error = useProductStore((state) => state.error);
 
   const isLoggedIn = useUserAuthStore((state) => state.isLoggedIn);
   const isAdmin = useAdminAuthStore((state) => state.isAdmin);
 
   useEffect(() => {
+    console.log("🚀 App mounting, fetching products...");
     fetchProducts();
   }, [fetchProducts]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log("📊 Product Store State:");
+    console.log("- Loading:", loading);
+    console.log("- Error:", error);
+    console.log("- Products count:", products.length);
+    console.log("- Products sample:", products.slice(0, 2));
+  }, [products, loading, error]);
 
   useEffect(() => {
     useUserAuthStore.getState().initialize();
@@ -441,10 +453,23 @@ export default function App() {
     document.head.appendChild(style);
   }, []);
 
+  // Show debug info in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log("🔧 Dev Mode - Store State:", { loading, error, productsCount: products.length });
+  }
+
   return (
     <Router>
       <div className="flex flex-col min-h-screen">
         <Navbar />
+        
+        {/* Debug Banner in Development */}
+        {process.env.NODE_ENV === 'development' && error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 text-center">
+            <strong>Debug:</strong> {error} | Products loaded: {products.length}
+          </div>
+        )}
+        
         <main className="flex-grow">
           <Routes>
             {/* Public Routes */}
@@ -453,10 +478,10 @@ export default function App() {
             <Route path="/products/:id" element={<ProductDetailsPage />} />
             <Route path="/cart" element={<CartPage />} />
 
-            {/* AI Specific Tools (these are direct routes, not nested under the sidebar layout) */}
+            {/* AI Specific Tools */}
             <Route path="/admin/image-editor" element={<ImageEditorApp />} />
             <Route
-              path="/admin/category-section-from-image" // This is the path for attribute generation from image
+              path="/admin/category-section-from-image"
               element={isAdmin ? <CategorySectionPage /> : <Navigate to="/admin-login" replace />}
             />
 
@@ -481,7 +506,6 @@ export default function App() {
               path="/admin"
               element={isAdmin ? <AdminDashboardPage /> : <Navigate to="/admin-login" replace />}
             >
-              {/* Default Admin page when navigating to /admin */}
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<DashboardOverview />} />
               <Route path="products" element={<ProductManagementPage />} />
