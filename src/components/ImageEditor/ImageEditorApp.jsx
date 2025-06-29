@@ -460,7 +460,6 @@ const BackgroundChanger = ({ onGenerate, onBack }) => {
             <h2>Change Background Color</h2>
             <div className="button-group">
                 <button className={`button small ${bgChoice === 'palette' ? '' : 'secondary'}`} onClick={() => setBgChoice('palette')}>From Color Palette</button>
-                <button className={`button small ${bgChoice === 'prompt' ? '' : 'secondary'}`} onClick={() => setBgChoice('prompt')}>With AI Prompt</button>
             </div>
 
             {bgChoice === 'palette' && (
